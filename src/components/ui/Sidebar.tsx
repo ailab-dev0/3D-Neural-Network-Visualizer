@@ -3,6 +3,7 @@ import { useModelStore, MODEL_PRESETS, type ModelType } from '../../stores/model
 import { useVisualizationStore, type LightConeMode } from '../../stores/visualizationStore';
 import { useUIStore } from '../../stores/uiStore';
 import { useNarrationStore } from '../../stores/narrationStore';
+import ComparisonPanel from './ComparisonPanel';
 
 /* ============================================
    SVG Icons — Inline, no external deps
@@ -59,6 +60,16 @@ function ChevronRightIcon() {
   );
 }
 
+function CompareIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="3" width="8" height="18" rx="1.5" />
+      <rect x="14" y="3" width="8" height="18" rx="1.5" />
+      <path d="M10 8h4M10 12h4M10 16h4" strokeDasharray="2 2" />
+    </svg>
+  );
+}
+
 /* ============================================
    Constants
    ============================================ */
@@ -66,6 +77,12 @@ const MODEL_TYPE_LABELS: Record<ModelType, string> = {
   ann: 'Artificial Neural Networks',
   cnn: 'Convolutional Neural Networks',
   llm: 'Large Language Models',
+};
+
+const MODEL_TYPE_SHORT: Record<ModelType, string> = {
+  ann: 'ANN',
+  cnn: 'CNN',
+  llm: 'LLM',
 };
 
 const MODEL_TYPE_COLORS: Record<ModelType, string> = {
@@ -99,6 +116,18 @@ const LAYER_TYPE_COLORS: Record<string, string> = {
 };
 
 /* ============================================
+   Precomputed layer counts for preset badges
+   ============================================ */
+const PRESET_LAYER_COUNTS: Record<string, number> = {};
+MODEL_PRESETS.forEach((p) => {
+  try {
+    PRESET_LAYER_COUNTS[p.id] = p.create().layers.length;
+  } catch {
+    PRESET_LAYER_COUNTS[p.id] = 0;
+  }
+});
+
+/* ============================================
    Models Tab
    ============================================ */
 function ModelsTab() {
@@ -110,45 +139,70 @@ function ModelsTab() {
   }));
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-7">
       {groups.map(({ type, presets }) => (
         <div key={type}>
           <h3
-            className="text-[10px] font-semibold uppercase tracking-[0.12em] mb-2.5 flex items-center gap-2"
-            style={{ color: MODEL_TYPE_COLORS[type] }}
+            className="text-[11px] font-bold uppercase tracking-[0.14em] mb-3.5 flex items-center gap-2.5 pb-2"
+            style={{
+              color: MODEL_TYPE_COLORS[type],
+              borderBottom: `1px solid color-mix(in srgb, ${MODEL_TYPE_COLORS[type]} 15%, transparent)`,
+            }}
           >
             <span
-              className="w-1.5 h-1.5 rounded-full"
-              style={{ background: MODEL_TYPE_COLORS[type], boxShadow: `0 0 6px ${MODEL_TYPE_GLOWS[type]}` }}
+              className="w-2 h-2 rounded-full"
+              style={{ background: MODEL_TYPE_COLORS[type], boxShadow: `0 0 8px ${MODEL_TYPE_GLOWS[type]}` }}
             />
             {MODEL_TYPE_LABELS[type]}
           </h3>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1.5">
             {presets.map((preset) => {
               const isActive = currentPresetId === preset.id;
               return (
                 <button
                   key={preset.id}
                   onClick={() => loadPreset(preset.id)}
-                  className={`preset-card preset-card-${type} w-full text-left px-3.5 py-2.5 rounded-xl cursor-pointer ${isActive ? 'preset-card-active' : ''}`}
+                  className={`preset-card preset-card-${type} w-full text-left px-4 py-3.5 rounded-xl cursor-pointer ${isActive ? 'preset-card-active' : ''}`}
                   style={{
                     background: isActive
-                      ? `linear-gradient(135deg, color-mix(in srgb, ${MODEL_TYPE_COLORS[type]} 12%, transparent), color-mix(in srgb, ${MODEL_TYPE_COLORS[type]} 5%, transparent))`
-                      : 'transparent',
+                      ? `linear-gradient(135deg, color-mix(in srgb, ${MODEL_TYPE_COLORS[type]} 14%, transparent), color-mix(in srgb, ${MODEL_TYPE_COLORS[type]} 6%, transparent))`
+                      : undefined,
                     border: isActive
-                      ? `1px solid color-mix(in srgb, ${MODEL_TYPE_COLORS[type]} 40%, transparent)`
-                      : '1px solid transparent',
+                      ? `1px solid color-mix(in srgb, ${MODEL_TYPE_COLORS[type]} 45%, transparent)`
+                      : undefined,
                     ['--preset-color' as string]: MODEL_TYPE_COLORS[type],
                     ['--preset-glow' as string]: MODEL_TYPE_GLOWS[type],
                   }}
                 >
-                  <div
-                    className="text-[13px] font-medium leading-tight"
-                    style={{ color: isActive ? MODEL_TYPE_COLORS[type] : 'var(--text-primary)' }}
-                  >
-                    {preset.name}
+                  <div className="flex items-center justify-between gap-2">
+                    <div
+                      className="text-[13px] font-semibold leading-tight"
+                      style={{ color: isActive ? MODEL_TYPE_COLORS[type] : 'var(--text-primary)' }}
+                    >
+                      {preset.name}
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span
+                        className="text-[9px] font-mono px-1.5 py-0.5 rounded-md"
+                        style={{
+                          color: 'var(--text-muted)',
+                          background: 'rgba(255, 255, 255, 0.04)',
+                        }}
+                      >
+                        {PRESET_LAYER_COUNTS[preset.id]}L
+                      </span>
+                      <span
+                        className="text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase"
+                        style={{
+                          color: MODEL_TYPE_COLORS[type],
+                          background: `color-mix(in srgb, ${MODEL_TYPE_COLORS[type]} 10%, transparent)`,
+                        }}
+                      >
+                        {MODEL_TYPE_SHORT[type]}
+                      </span>
+                    </div>
                   </div>
-                  <div className="text-[11px] mt-0.5 leading-snug" style={{ color: 'var(--text-muted)' }}>
+                  <div className="text-[11px] mt-1 leading-snug" style={{ color: 'var(--text-muted)' }}>
                     {preset.description}
                   </div>
                 </button>
@@ -212,14 +266,17 @@ function LayersTab() {
           <button
             key={layer.id}
             onClick={() => selectLayer(isSelected ? null : layer.id)}
-            className="w-full text-left px-3 py-2 rounded-xl cursor-pointer flex items-center gap-2.5 group"
+            className="w-full text-left px-3 py-2.5 rounded-xl cursor-pointer flex items-center gap-2.5 group"
             style={{
               background: isSelected
-                ? 'rgba(179, 136, 255, 0.1)'
-                : 'transparent',
+                ? 'rgba(179, 136, 255, 0.12)'
+                : 'rgba(255, 255, 255, 0.015)',
               border: isSelected
-                ? '1px solid rgba(179, 136, 255, 0.25)'
-                : '1px solid transparent',
+                ? '1px solid rgba(179, 136, 255, 0.3)'
+                : '1px solid rgba(255, 255, 255, 0.04)',
+              boxShadow: isSelected
+                ? '0 0 16px rgba(179, 136, 255, 0.12)'
+                : 'none',
               transition: 'all 250ms cubic-bezier(0.4, 0, 0.2, 1)',
             }}
           >
@@ -301,7 +358,11 @@ function SettingsTab() {
     <div className="flex flex-col gap-6">
       {/* Sliders section */}
       <div>
-        <h4 className="text-[10px] font-semibold uppercase tracking-[0.12em] mb-4" style={{ color: 'var(--text-muted)' }}>
+        <h4 className="text-[11px] font-bold uppercase tracking-[0.14em] mb-4 flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4" />
+          </svg>
           Visual Controls
         </h4>
         <div className="flex flex-col gap-5">
@@ -312,11 +373,15 @@ function SettingsTab() {
       </div>
 
       {/* Divider */}
-      <div className="h-px" style={{ background: 'var(--border)' }} />
+      <div className="section-divider" />
 
       {/* Toggles section */}
       <div>
-        <h4 className="text-[10px] font-semibold uppercase tracking-[0.12em] mb-4" style={{ color: 'var(--text-muted)' }}>
+        <h4 className="text-[11px] font-bold uppercase tracking-[0.14em] mb-4 flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <path d="M9 3v18M3 9h18" />
+          </svg>
           Display Options
         </h4>
         <div className="flex flex-col gap-3.5">
@@ -328,13 +393,13 @@ function SettingsTab() {
       </div>
 
       {/* Divider */}
-      <div className="h-px" style={{ background: 'var(--border)' }} />
+      <div className="section-divider" />
 
       {/* Cognitive Light Cone section */}
       <div>
         <h4
-          className="text-[10px] font-semibold uppercase tracking-[0.12em] mb-4 flex items-center gap-2"
-          style={{ color: lightConeEnabled ? '#00e5ff' : 'var(--text-muted)' }}
+          className="text-[11px] font-bold uppercase tracking-[0.14em] mb-4 flex items-center gap-2"
+          style={{ color: lightConeEnabled ? '#00e5ff' : 'var(--text-secondary)' }}
         >
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2">
             <path d="M6 1 L2 11 L10 11 Z" />
@@ -400,13 +465,13 @@ function SettingsTab() {
       </div>
 
       {/* Divider */}
-      <div className="h-px" style={{ background: 'var(--border)' }} />
+      <div className="section-divider" />
 
       {/* Voice Narration section */}
       <div>
         <h4
-          className="text-[10px] font-semibold uppercase tracking-[0.12em] mb-4 flex items-center gap-2"
-          style={{ color: voiceEnabled ? 'var(--accent-cyan)' : 'var(--text-muted)' }}
+          className="text-[11px] font-bold uppercase tracking-[0.14em] mb-4 flex items-center gap-2"
+          style={{ color: voiceEnabled ? 'var(--accent-cyan)' : 'var(--text-secondary)' }}
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
@@ -515,12 +580,13 @@ function ToggleSetting({ label, checked, onChange }: {
 /* ============================================
    Tab Configuration
    ============================================ */
-type TabId = 'models' | 'layers' | 'settings';
+type TabId = 'models' | 'layers' | 'settings' | 'compare';
 
 const TABS: { id: TabId; label: string; Icon: React.ComponentType<{ size?: number }> }[] = [
   { id: 'models', label: 'Models', Icon: CubeIcon },
   { id: 'layers', label: 'Layers', Icon: LayersIcon },
   { id: 'settings', label: 'Settings', Icon: SlidersIcon },
+  { id: 'compare', label: 'Compare', Icon: CompareIcon },
 ];
 
 /* ============================================
@@ -564,25 +630,28 @@ export default function Sidebar() {
           className="sidebar-content flex flex-col h-full"
         >
           {/* Header */}
-          <div className="px-5 pt-5 pb-3 shrink-0">
-            <div className="flex items-center gap-2.5">
+          <div className="px-5 pt-5 pb-4 shrink-0">
+            <div className="flex items-center gap-3">
               <div
-                className="w-7 h-7 rounded-lg flex items-center justify-center"
+                className="w-9 h-9 rounded-xl flex items-center justify-center"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(79, 195, 247, 0.15), rgba(179, 136, 255, 0.15))',
-                  border: '1px solid var(--border)',
+                  background: 'linear-gradient(135deg, rgba(79, 195, 247, 0.18), rgba(179, 136, 255, 0.18))',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  boxShadow: '0 0 16px rgba(79, 195, 247, 0.1)',
                 }}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="3" />
                   <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" />
                 </svg>
               </div>
               <div>
-                <h2 className="text-[13px] font-semibold" style={{ color: 'var(--text-primary)' }}>Controls</h2>
-                <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Configure visualization</p>
+                <h2 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Controls</h2>
+                <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>Configure visualization</p>
               </div>
             </div>
+            {/* Gradient line below header */}
+            <div className="section-divider mt-4" />
           </div>
 
           {/* Tab bar */}
@@ -617,20 +686,30 @@ export default function Sidebar() {
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto px-4 py-4">
+          <div className="flex-1 overflow-y-auto px-5 py-5">
             {sidebarTab === 'models' && <ModelsTab />}
             {sidebarTab === 'layers' && <LayersTab />}
             {sidebarTab === 'settings' && <SettingsTab />}
+            {sidebarTab === 'compare' && <ComparisonPanel />}
           </div>
 
-          {/* Footer hint */}
+          {/* Footer */}
           <div
-            className="px-4 py-3 shrink-0"
-            style={{ borderTop: '1px solid var(--border-subtle)' }}
+            className="px-4 py-3.5 shrink-0"
+            style={{ borderTop: '1px solid var(--border)' }}
           >
-            <p className="text-[10px] text-center" style={{ color: 'var(--text-muted)' }}>
-              Press <kbd className="kbd-key" style={{ fontSize: '9px', padding: '1px 5px', minWidth: '18px', borderBottomWidth: '2px' }}>?</kbd> for shortcuts
-            </p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-md" style={{ color: 'var(--accent-blue)', background: 'rgba(79, 195, 247, 0.08)' }}>
+                  v1.0
+                </span>
+                <span className="text-[9px]" style={{ color: 'var(--text-muted)' }}>3D Neural Viz</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-[9px]" style={{ color: 'var(--text-muted)' }}>Press</span>
+                <kbd className="kbd-key" style={{ fontSize: '9px', padding: '1px 5px', minWidth: '18px', borderBottomWidth: '2px' }}>?</kbd>
+              </div>
+            </div>
           </div>
         </div>
       </div>

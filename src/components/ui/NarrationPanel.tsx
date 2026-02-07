@@ -567,9 +567,9 @@ export default function NarrationPanel() {
       className="fixed bottom-20 z-40 narration-panel-enter"
       style={{
         left: sidebarOpen ? '296px' : '16px',
-        maxWidth: '380px',
+        maxWidth: '460px',
         width: 'calc(100vw - 340px)',
-        minWidth: '280px',
+        minWidth: '300px',
         maxHeight: 'calc(100vh - 120px)',
         overflowY: 'auto',
         transition: 'left 300ms ease',
@@ -603,11 +603,20 @@ export default function NarrationPanel() {
 
       {/* Main narration panel */}
       <div
-        className="glass-panel-strong rounded-2xl px-4 py-3.5"
+        className="glass-panel-strong rounded-2xl overflow-hidden"
         style={{
           boxShadow: '0 8px 40px rgba(0, 0, 0, 0.4), 0 0 1px rgba(255, 255, 255, 0.08)',
         }}
       >
+        {/* Gradient accent at top */}
+        <div
+          className="h-[2px] w-full"
+          style={{
+            background: `linear-gradient(90deg, transparent, ${iconColor}, transparent)`,
+            opacity: 0.5,
+          }}
+        />
+      <div className="px-5 py-4">
         {/* Header row */}
         <div className="flex items-center justify-between mb-2.5">
           <div className="flex items-center gap-2">
@@ -633,10 +642,11 @@ export default function NarrationPanel() {
             </span>
             {simulationRunning && (
               <span
-                className="text-[9px] font-mono px-1.5 py-0.5 rounded-md"
+                className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md"
                 style={{
                   color: 'var(--accent-cyan)',
-                  background: 'rgba(0, 229, 255, 0.1)',
+                  background: 'rgba(0, 229, 255, 0.12)',
+                  border: '1px solid rgba(0, 229, 255, 0.2)',
                 }}
               >
                 Step {simulationStep + 1}/{simulationTotalSteps}
@@ -737,7 +747,7 @@ export default function NarrationPanel() {
 
         {/* Narration text with typewriter effect */}
         <div
-          className="text-[12px] leading-relaxed min-h-[36px]"
+          className="text-[13px] leading-relaxed min-h-[40px]"
           style={{ color: 'var(--text-secondary)', overflowWrap: 'break-word', wordBreak: 'break-word' }}
         >
           {displayed || (
@@ -750,7 +760,7 @@ export default function NarrationPanel() {
 
         {/* Progress bar for simulation */}
         {simulationRunning && (
-          <div className="mt-2.5 h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255, 255, 255, 0.06)' }}>
+          <div className="mt-3 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255, 255, 255, 0.06)' }}>
             <div
               className="h-full rounded-full"
               style={{
@@ -764,7 +774,7 @@ export default function NarrationPanel() {
         )}
 
         {/* Keyboard hint */}
-        <div className="mt-2 flex items-center gap-1.5">
+        <div className="mt-2.5 flex items-center gap-1.5">
           <span className="text-[9px]" style={{ color: 'var(--text-muted)' }}>Press</span>
           <kbd className="kbd-key" style={{ fontSize: '8px', padding: '0px 4px', minWidth: '14px', borderBottomWidth: '1.5px' }}>N</kbd>
           <span className="text-[9px]" style={{ color: 'var(--text-muted)' }}>to toggle</span>
@@ -772,6 +782,7 @@ export default function NarrationPanel() {
           <kbd className="kbd-key" style={{ fontSize: '8px', padding: '0px 4px', minWidth: '14px', borderBottomWidth: '1.5px' }}>V</kbd>
           <span className="text-[9px]" style={{ color: 'var(--text-muted)' }}>voice</span>
         </div>
+      </div>
       </div>
     </div>
   );

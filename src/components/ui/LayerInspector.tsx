@@ -108,13 +108,13 @@ function LLMDetails({ layer }: { layer: TransformerLayer }) {
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="detail-row flex items-center justify-between">
-      <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{label}</span>
+    <div className="detail-row flex items-center justify-between py-1.5">
+      <span className="text-[11px] font-medium" style={{ color: 'var(--text-muted)' }}>{label}</span>
       <span
-        className="text-[11px] font-mono px-1.5 py-0.5 rounded"
+        className="text-[11px] font-mono px-2 py-0.5 rounded-md"
         style={{
           color: 'var(--text-primary)',
-          background: 'rgba(255, 255, 255, 0.03)',
+          background: 'rgba(255, 255, 255, 0.04)',
         }}
       >
         {value}
@@ -154,41 +154,41 @@ export default function LayerInspector() {
   const paramCount = calculateParamCount(currentModel, selectedLayerId);
   const badgeColor = TYPE_BADGE_COLORS[layer.type] ?? 'var(--text-muted)';
 
-  // Offset below ModelInfo when a model is loaded (ModelInfo is ~100px tall at top-4)
-  const topOffset = currentModel ? 'calc(1rem + 110px)' : '1rem';
+  // Offset below ModelInfo when a model is loaded (ModelInfo is taller now ~160px at top-4)
+  const topOffset = currentModel ? 'calc(1rem + 170px)' : '1rem';
 
   return (
-    <div className="fixed right-4 z-30 w-72 slide-in-right" style={{ top: topOffset }}>
-      <div className="glass-panel rounded-xl overflow-hidden">
+    <div className="fixed right-4 z-30 w-80 slide-in-right" style={{ top: topOffset }}>
+      <div className="glass-panel-strong rounded-2xl overflow-hidden">
         {/* Top accent line */}
         <div
-          className="h-px w-full"
+          className="h-[2px] w-full"
           style={{
             background: `linear-gradient(90deg, transparent, ${badgeColor}, transparent)`,
-            opacity: 0.5,
+            opacity: 0.6,
           }}
         />
 
         {/* Header */}
         <div
-          className="flex items-start justify-between p-4"
-          style={{ borderBottom: '1px solid var(--border-subtle)' }}
+          className="flex items-start justify-between px-5 py-4"
+          style={{ borderBottom: '1px solid var(--border)' }}
         >
           <div className="min-w-0 flex-1">
-            <h3 className="text-[13px] font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
+            <h3 className="text-[14px] font-bold truncate" style={{ color: 'var(--text-primary)' }}>
               {layer.label || layer.id}
             </h3>
             <span
-              className="inline-flex items-center gap-1.5 mt-1.5 px-2 py-0.5 rounded-md text-[10px] uppercase font-semibold tracking-wider"
+              className="inline-flex items-center gap-1.5 mt-2 px-2 py-0.5 rounded-md text-[10px] uppercase font-bold tracking-wider"
               style={{
                 color: badgeColor,
-                background: `color-mix(in srgb, ${badgeColor} 10%, transparent)`,
-                border: `1px solid color-mix(in srgb, ${badgeColor} 20%, transparent)`,
+                background: `color-mix(in srgb, ${badgeColor} 12%, transparent)`,
+                border: `1px solid color-mix(in srgb, ${badgeColor} 25%, transparent)`,
               }}
             >
               <span
                 className="w-1.5 h-1.5 rounded-full"
-                style={{ background: badgeColor, boxShadow: `0 0 4px ${badgeColor}` }}
+                style={{ background: badgeColor, boxShadow: `0 0 6px ${badgeColor}` }}
               />
               {layer.type.replace('_', ' ')}
             </span>
@@ -210,7 +210,16 @@ export default function LayerInspector() {
         </div>
 
         {/* Details */}
-        <div className="p-4">
+        <div className="px-5 py-4">
+          <h4
+            className="text-[10px] font-bold uppercase tracking-[0.14em] mb-3 flex items-center gap-1.5"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M4 6h16M4 12h16M4 18h10" />
+            </svg>
+            Properties
+          </h4>
           {currentModel.type === 'ann' && <ANNDetails layer={layer as ANNLayer} />}
           {currentModel.type === 'cnn' && <CNNDetails layer={layer as CNNLayer} />}
           {currentModel.type === 'llm' && <LLMDetails layer={layer as TransformerLayer} />}
@@ -218,18 +227,15 @@ export default function LayerInspector() {
           {paramCount !== null && (
             <>
               <div
-                className="h-px my-3"
-                style={{
-                  background: 'linear-gradient(90deg, transparent, var(--border), transparent)',
-                }}
+                className="section-divider my-3"
               />
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-medium" style={{ color: 'var(--text-muted)' }}>Parameters</span>
+                <span className="text-[11px] font-semibold" style={{ color: 'var(--text-secondary)' }}>Parameters</span>
                 <span
-                  className="text-[12px] font-mono font-semibold px-2 py-0.5 rounded-md"
+                  className="text-[12px] font-mono font-bold px-2 py-0.5 rounded-md"
                   style={{
                     color: 'var(--accent-blue)',
-                    background: 'rgba(79, 195, 247, 0.06)',
+                    background: 'rgba(79, 195, 247, 0.08)',
                   }}
                 >
                   {formatNumber(paramCount)}

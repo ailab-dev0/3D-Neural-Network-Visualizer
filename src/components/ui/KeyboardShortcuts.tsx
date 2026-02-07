@@ -9,6 +9,7 @@ const SHORTCUTS = [
   { key: 'C', description: 'Toggle cognitive light cone' },
   { key: 'N', description: 'Toggle narration panel' },
   { key: 'V', description: 'Toggle voice narration' },
+  { key: 'K', description: 'Toggle comparison mode' },
   { key: '1', description: 'Switch to ANN tab' },
   { key: '2', description: 'Switch to CNN tab' },
   { key: '3', description: 'Switch to LLM tab' },

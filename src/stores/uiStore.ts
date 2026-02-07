@@ -2,7 +2,7 @@ import { create } from 'zustand';
 
 interface UIState {
   sidebarOpen: boolean;
-  sidebarTab: 'models' | 'layers' | 'settings';
+  sidebarTab: 'models' | 'layers' | 'settings' | 'compare';
   inspectorOpen: boolean;
   tooltipVisible: boolean;
   tooltipContent: string;
@@ -10,7 +10,7 @@ interface UIState {
 
   // Actions
   toggleSidebar: () => void;
-  setSidebarTab: (tab: 'models' | 'layers' | 'settings') => void;
+  setSidebarTab: (tab: 'models' | 'layers' | 'settings' | 'compare') => void;
   toggleInspector: () => void;
   showTooltip: (content: string, x: number, y: number) => void;
   hideTooltip: () => void;

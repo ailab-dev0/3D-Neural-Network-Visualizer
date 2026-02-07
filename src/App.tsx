@@ -15,6 +15,8 @@ import { useModelStore } from './stores/modelStore';
 import { useVisualizationStore } from './stores/visualizationStore';
 import { useUIStore } from './stores/uiStore';
 import { useNarrationStore } from './stores/narrationStore';
+import { useComparisonStore } from './stores/comparisonStore';
+import ComparisonView from './components/canvas/ComparisonView';
 import ErrorBoundary from './components/shared/ErrorBoundary';
 import type { ANNModel } from './models/ann-schema';
 import type { CNNModel } from './models/cnn-schema';
@@ -121,6 +123,9 @@ function useKeyboardShortcuts() {
   const { setSidebarTab } = useUIStore();
   const { setModelType } = useModelStore();
   const { toggleNarration, toggleVoice } = useNarrationStore();
+  const comparisonMode = useComparisonStore((s) => s.comparisonMode);
+  const enableComparison = useComparisonStore((s) => s.enableComparison);
+  const disableComparison = useComparisonStore((s) => s.disableComparison);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -164,6 +169,15 @@ function useKeyboardShortcuts() {
         case 'V':
           toggleVoice();
           break;
+        case 'k':
+        case 'K':
+          if (comparisonMode) {
+            disableComparison();
+          } else {
+            enableComparison();
+            setSidebarTab('compare');
+          }
+          break;
         case '1':
           setModelType('ann');
           setSidebarTab('models');
@@ -181,12 +195,16 @@ function useKeyboardShortcuts() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [animationState, autoRotate, play, pause, toggleLabels, toggleWeights, toggleDataFlow, toggleLightCone, setAutoRotate, setSidebarTab, setModelType, toggleNarration, toggleVoice]);
+  }, [animationState, autoRotate, comparisonMode, play, pause, toggleLabels, toggleWeights, toggleDataFlow, toggleLightCone, setAutoRotate, setSidebarTab, setModelType, toggleNarration, toggleVoice, enableComparison, disableComparison]);
 }
 
 export default function App() {
   useKeyboardShortcuts();
   const sidebarOpen = useUIStore((s) => s.sidebarOpen);
+  const comparisonMode = useComparisonStore((s) => s.comparisonMode);
+  const modelA = useComparisonStore((s) => s.modelA);
+  const modelB = useComparisonStore((s) => s.modelB);
+  const showComparison = comparisonMode && modelA && modelB;
 
   return (
     <div className="relative w-full h-full overflow-hidden">
@@ -195,45 +213,61 @@ export default function App() {
         className="absolute top-0 right-0 z-50 pointer-events-none"
         style={{
           left: sidebarOpen ? '290px' : '0px',
-          background: 'linear-gradient(to bottom, rgba(10, 10, 15, 0.5) 0%, rgba(10, 10, 15, 0.2) 60%, transparent 100%)',
+          background: 'linear-gradient(to bottom, rgba(8, 8, 13, 0.85) 0%, rgba(8, 8, 13, 0.6) 40%, rgba(8, 8, 13, 0.2) 70%, transparent 100%)',
           transition: 'left 300ms ease',
         }}
       >
-        <div className="relative flex items-center justify-center py-3 px-4">
+        <div className="relative flex items-center justify-center py-5 px-6">
           <div className="text-center">
-            <h1 className="title-shimmer text-sm font-semibold tracking-wide">
+            <h1 className="title-shimmer text-lg font-bold tracking-wide">
               Neural Network Visualizer
             </h1>
             <p
-              className="text-[10px] font-medium uppercase tracking-[0.2em] mt-0.5"
+              className="text-xs font-medium uppercase tracking-[0.25em] mt-1"
               style={{ color: 'var(--text-muted)' }}
             >
               Interactive 3D Architecture Explorer
             </p>
           </div>
-          {/* Gradient underline accent */}
+          {/* Animated gradient underline accent */}
           <div
-            className="absolute bottom-0 left-1/2 -translate-x-1/2 h-px"
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 header-gradient-border"
             style={{
-              width: '180px',
-              background: 'linear-gradient(90deg, transparent, var(--accent-blue), var(--accent-purple), transparent)',
-              opacity: 0.4,
+              width: '260px',
+              borderRadius: '2px',
             }}
           />
         </div>
       </header>
 
-      {/* 3D Canvas - full screen background */}
-      <div className="absolute inset-0">
-        <ErrorBoundary>
-          <Scene>
-            <NetworkVisualization />
-          </Scene>
-        </ErrorBoundary>
-      </div>
+      {/* 3D Canvas — comparison split-screen or single-canvas */}
+      {showComparison ? (
+        <div
+          className="absolute inset-0"
+          style={{
+            left: sidebarOpen ? '290px' : '0px',
+            transition: 'left 300ms ease',
+          }}
+        >
+          <ErrorBoundary>
+            <ComparisonView />
+          </ErrorBoundary>
+        </div>
+      ) : (
+        <>
+          {/* Normal single canvas */}
+          <div className="absolute inset-0">
+            <ErrorBoundary>
+              <Scene>
+                <NetworkVisualization />
+              </Scene>
+            </ErrorBoundary>
+          </div>
 
-      {/* Empty state */}
-      <EmptyState />
+          {/* Empty state */}
+          <EmptyState />
+        </>
+      )}
 
       {/* UI Overlays */}
       <Sidebar />

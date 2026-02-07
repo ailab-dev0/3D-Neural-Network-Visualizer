@@ -38,17 +38,23 @@ export default function PlaybackControls() {
       }}
     >
       <div
-        className="glass-panel-strong rounded-2xl px-5 py-3 flex items-center gap-4"
+        className="glass-panel-strong rounded-2xl overflow-hidden flex flex-col"
         style={{
           boxShadow: '0 8px 40px rgba(0, 0, 0, 0.5), 0 0 1px rgba(255, 255, 255, 0.1)',
         }}
       >
+        {/* Gradient accent line at top */}
+        <div
+          className="header-gradient-border"
+          style={{ height: '2px' }}
+        />
+      <div className="px-6 py-3.5 flex items-center gap-4">
         {/* Transport controls */}
         <div className="flex items-center gap-2">
           {/* Stop */}
           <button
             onClick={stop}
-            className="transport-btn w-9 h-9 flex items-center justify-center rounded-xl cursor-pointer"
+            className="transport-btn w-10 h-10 flex items-center justify-center rounded-xl cursor-pointer"
             style={{
               background: animationState === 'idle'
                 ? 'rgba(255, 255, 255, 0.04)'
@@ -66,7 +72,7 @@ export default function PlaybackControls() {
           {/* Play / Pause */}
           <button
             onClick={isPlaying ? pause : play}
-            className={`transport-btn w-10 h-10 flex items-center justify-center rounded-2xl cursor-pointer ${isPlaying ? 'play-pulse' : 'play-btn-idle'}`}
+            className={`transport-btn w-11 h-11 flex items-center justify-center rounded-2xl cursor-pointer ${isPlaying ? 'play-pulse' : 'play-btn-idle'}`}
             style={{
               background: isPlaying
                 ? 'linear-gradient(135deg, rgba(79, 195, 247, 0.2), rgba(79, 195, 247, 0.1))'
@@ -91,7 +97,7 @@ export default function PlaybackControls() {
           {/* Step Forward */}
           <button
             onClick={step}
-            className="transport-btn w-9 h-9 flex items-center justify-center rounded-xl cursor-pointer"
+            className="transport-btn w-10 h-10 flex items-center justify-center rounded-xl cursor-pointer"
             style={{
               background: 'rgba(255, 255, 255, 0.04)',
               color: 'var(--text-secondary)',
@@ -136,7 +142,7 @@ export default function PlaybackControls() {
               type="range" min={0.1} max={3} step={0.1}
               value={animationSpeed}
               onChange={(e) => setAnimationSpeed(parseFloat(e.target.value))}
-              className="w-24 h-1 rounded-full appearance-none cursor-pointer"
+              className="w-32 h-1 rounded-full appearance-none cursor-pointer"
               style={{
                 background: `linear-gradient(to right, var(--accent-blue) ${speedPct}%, rgba(255,255,255,0.06) ${speedPct}%)`,
               }}
@@ -224,6 +230,7 @@ export default function PlaybackControls() {
             Cone
           </button>
         </div>
+      </div>
       </div>
     </div>
   );

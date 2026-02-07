@@ -6,6 +6,12 @@ const MODEL_TYPE_COLORS: Record<string, string> = {
   llm: 'var(--accent-blue)',
 };
 
+const MODEL_TYPE_FULL: Record<string, string> = {
+  ann: 'Neural Network',
+  cnn: 'Convolutional',
+  llm: 'Transformer',
+};
+
 function formatParameterCount(count: number): string {
   if (count >= 1_000_000_000) {
     return `${(count / 1_000_000_000).toFixed(1)}B`;
@@ -27,45 +33,99 @@ export default function ModelInfo() {
   const paramCount = currentModel.metadata?.parameters;
   const layerCount = currentModel.layers.length;
   const typeColor = MODEL_TYPE_COLORS[currentModel.type] ?? 'var(--accent-blue)';
+  const archLabel = MODEL_TYPE_FULL[currentModel.type] ?? currentModel.type.toUpperCase();
+
+  // Get first layer info for input dimensions display
+  const firstLayer = currentModel.layers[0];
+  let inputDimLabel: string | null = null;
+  if (firstLayer) {
+    if ('neurons' in firstLayer && firstLayer.neurons) {
+      inputDimLabel = `${firstLayer.neurons}`;
+    } else if ('width' in firstLayer && firstLayer.width && 'height' in firstLayer && firstLayer.height) {
+      const f = firstLayer as { width: number; height: number; channels?: number };
+      inputDimLabel = f.channels ? `${f.width}x${f.height}x${f.channels}` : `${f.width}x${f.height}`;
+    }
+  }
 
   return (
     <div
-      className="fixed top-4 right-4 z-30 glass-panel rounded-xl overflow-hidden slide-in-right"
-      style={{ minWidth: '180px', maxWidth: '220px' }}
+      className="fixed top-4 right-4 z-30 glass-panel-strong rounded-2xl overflow-hidden slide-in-right"
+      style={{ minWidth: '220px', maxWidth: '280px' }}
     >
       {/* Top accent line */}
       <div
-        className="h-px w-full"
+        className="h-[2px] w-full"
         style={{
           background: `linear-gradient(90deg, transparent, ${typeColor}, transparent)`,
-          opacity: 0.5,
+          opacity: 0.6,
         }}
       />
 
-      <div className="px-4 py-3">
-        {/* Model name with type dot */}
-        <div className="flex items-center gap-2 mb-2.5">
+      <div className="px-5 py-4">
+        {/* Type badge + Model name */}
+        <div className="mb-3">
           <span
-            className="w-2 h-2 rounded-full shrink-0"
+            className="text-[10px] font-bold uppercase tracking-[0.15em] px-2 py-1 rounded-md inline-flex items-center gap-1.5"
             style={{
-              background: typeColor,
-              boxShadow: `0 0 8px ${typeColor}`,
+              color: typeColor,
+              background: `color-mix(in srgb, ${typeColor} 12%, transparent)`,
+              border: `1px solid color-mix(in srgb, ${typeColor} 25%, transparent)`,
             }}
-          />
-          <div
-            className="text-[13px] font-semibold truncate"
-            style={{ color: 'var(--text-primary)' }}
           >
-            {currentModel.name}
-          </div>
+            <span
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ background: typeColor, boxShadow: `0 0 6px ${typeColor}` }}
+            />
+            {currentModel.type.toUpperCase()}
+          </span>
         </div>
 
+        <div
+          className="text-[14px] font-bold leading-tight mb-1"
+          style={{ color: 'var(--text-primary)' }}
+        >
+          {currentModel.name}
+        </div>
+
+        {/* Description */}
+        {currentModel.description && (
+          <p
+            className="text-[11px] leading-relaxed mb-3"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            {currentModel.description}
+          </p>
+        )}
+
+        {/* Divider */}
+        <div
+          className="h-px mb-3"
+          style={{ background: 'linear-gradient(90deg, transparent, var(--border-active), transparent)' }}
+        />
+
         {/* Stats */}
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-2">
+          <div className="detail-row flex items-center justify-between gap-4">
+            <span
+              className="text-[11px] font-medium uppercase tracking-[0.1em]"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              Architecture
+            </span>
+            <span
+              className="text-[11px] font-medium px-1.5 py-0.5 rounded"
+              style={{
+                color: typeColor,
+                background: `color-mix(in srgb, ${typeColor} 6%, transparent)`,
+              }}
+            >
+              {archLabel}
+            </span>
+          </div>
           {paramCount != null && (
             <div className="detail-row flex items-center justify-between gap-4">
               <span
-                className="text-[10px] font-medium uppercase tracking-[0.1em]"
+                className="text-[11px] font-medium uppercase tracking-[0.1em]"
                 style={{ color: 'var(--text-muted)' }}
               >
                 Params
@@ -83,7 +143,7 @@ export default function ModelInfo() {
           )}
           <div className="detail-row flex items-center justify-between gap-4">
             <span
-              className="text-[10px] font-medium uppercase tracking-[0.1em]"
+              className="text-[11px] font-medium uppercase tracking-[0.1em]"
               style={{ color: 'var(--text-muted)' }}
             >
               Layers
@@ -98,23 +158,25 @@ export default function ModelInfo() {
               {layerCount}
             </span>
           </div>
-          <div className="detail-row flex items-center justify-between gap-4">
-            <span
-              className="text-[10px] font-medium uppercase tracking-[0.1em]"
-              style={{ color: 'var(--text-muted)' }}
-            >
-              Type
-            </span>
-            <span
-              className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded"
-              style={{
-                color: typeColor,
-                background: `color-mix(in srgb, ${typeColor} 8%, transparent)`,
-              }}
-            >
-              {currentModel.type}
-            </span>
-          </div>
+          {inputDimLabel && (
+            <div className="detail-row flex items-center justify-between gap-4">
+              <span
+                className="text-[11px] font-medium uppercase tracking-[0.1em]"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                Input
+              </span>
+              <span
+                className="text-[11px] font-mono px-1.5 py-0.5 rounded"
+                style={{
+                  color: 'var(--accent-green)',
+                  background: 'rgba(105, 240, 174, 0.06)',
+                }}
+              >
+                {inputDimLabel}
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </div>
