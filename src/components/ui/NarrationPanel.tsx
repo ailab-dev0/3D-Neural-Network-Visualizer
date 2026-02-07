@@ -295,20 +295,78 @@ export default function NarrationPanel() {
   }, [currentPresetId, narrationEnabled, setNarration]);
 
   // ---- TRIGGER: Layer selected ----
+  // Generates a unique narration for each layer based on its specific
+  // properties (neuron count, activation, position, etc.) rather than
+  // using the same generic text for all layers of the same type.
   useEffect(() => {
     if (!narrationEnabled || !currentModel) return;
     if (selectedLayerId && selectedLayerId !== prevLayerRef.current) {
       prevLayerRef.current = selectedLayerId;
       const layer = currentModel.layers.find((l) => l.id === selectedLayerId);
       if (layer) {
-        const layerType = layer.type;
-        let text = layerNarrations[layerType];
-        if (text) {
-          // Add specific details from the layer
-          const label = layer.label || layer.id;
-          text = `[${label}] ${text}`;
-          setNarration(text, 'layer');
+        const layerIndex = currentModel.layers.findIndex((l) => l.id === layer.id);
+        const totalLayers = currentModel.layers.length;
+        const label = layer.label || layer.id;
+        // Use unknown -> Record cast to access optional props across union types
+        const a = layer as unknown as Record<string, unknown>;
+
+        // Build a dynamic narration unique to this specific layer
+        let text = '';
+
+        if (layer.type === 'input') {
+          const neurons = (a.neurons as number) || 0;
+          const w = a.width as number | undefined;
+          const h = a.height as number | undefined;
+          const ch = a.channels as number | undefined;
+          text = w && h
+            ? `[${label}] Input layer receiving ${w}x${h}${ch ? `x${ch}` : ''} data. This is where raw ${ch === 1 ? 'grayscale' : ch === 3 ? 'RGB color' : ''} pixel values enter the network. No computation happens here — values are simply passed forward through ${currentModel.layers.length - 1} subsequent layers.`
+            : `[${label}] Input layer with ${neurons} neurons — each represents one feature of the input data. This is layer 1 of ${totalLayers} in this ${currentModel.type.toUpperCase()} architecture.`;
+        } else if (layer.type === 'hidden') {
+          const neurons = (a.neurons as number) || 0;
+          const activation = (a.activation as string) || 'linear';
+          const prevLayer = currentModel.layers[layerIndex - 1];
+          const prevNeurons = prevLayer ? ((prevLayer as unknown as Record<string, unknown>).neurons as number) || 0 : 0;
+          const connCount = neurons * prevNeurons;
+          const position = layerIndex <= 1 ? 'first' : layerIndex >= totalLayers - 2 ? 'last' : 'middle';
+          const posDesc = position === 'first' ? 'the first processing stage, learning low-level feature combinations'
+            : position === 'last' ? 'the final hidden stage before output, refining high-level decision features'
+            : `processing stage ${layerIndex} of ${totalLayers}, building increasingly abstract representations`;
+          text = `[${label}] Dense layer with ${neurons} neurons using ${activation.toUpperCase()} activation. Receives ${prevNeurons} inputs through ${connCount.toLocaleString()} weighted connections. This is ${posDesc}. Each neuron computes: output = ${activation}(W·x + b).`;
+        } else if (layer.type === 'output') {
+          const neurons = (a.neurons as number) || 0;
+          const activation = (a.activation as string) || 'linear';
+          text = `[${label}] Output layer producing ${neurons} final values with ${activation} activation. ${activation === 'softmax' ? `Softmax converts raw scores into a probability distribution summing to 1 — the highest probability is the predicted class.` : activation === 'sigmoid' ? `Sigmoid outputs ${neurons} independent probabilities between 0 and 1.` : `Linear activation passes values through directly for regression tasks.`} This is the final layer — predictions emerge here.`;
+        } else if (layer.type === 'conv2d') {
+          const filters = (a.filters as number) || 0;
+          const ks = (a.kernelSize as number) || 3;
+          const w = (a.width as number) || 0;
+          const h = (a.height as number) || 0;
+          text = `[${label}] Convolutional layer with ${filters} filters of size ${ks}x${ks}, producing ${w}x${h}x${filters} feature maps. ${layerIndex <= 2 ? 'Early conv layers detect simple patterns like edges, corners, and color gradients.' : layerIndex >= totalLayers - 3 ? 'Deep conv layers combine lower-level features into object parts and semantic patterns.' : 'Mid-level conv layers detect textures, shapes, and spatial patterns.'} Each filter shares weights across all spatial positions.`;
+        } else if (layer.type === 'maxpool' || layer.type === 'avgpool') {
+          const ps = (a.poolSize as number) || 2;
+          const w = (a.width as number) || 0;
+          const h = (a.height as number) || 0;
+          const poolName = layer.type === 'maxpool' ? 'Max' : 'Average';
+          text = `[${label}] ${poolName} pooling with ${ps}x${ps} window, reducing spatial size to ${w}x${h}. ${layer.type === 'maxpool' ? 'Keeps the strongest activation in each region, providing translation invariance.' : 'Averages activations in each region, preserving overall signal magnitude.'}`;
+        } else if (layer.type === 'attention') {
+          const cfg = a.config as Record<string, unknown> | undefined;
+          const heads = cfg?.nHeads as number || 0;
+          const dModel = cfg?.dModel as number || 0;
+          const dk = heads ? Math.floor(dModel / heads) : 0;
+          text = `[${label}] Multi-head self-attention with ${heads} heads (d_k=${dk}). Each head independently computes attention scores — determining which tokens should "look at" which other tokens. With ${heads} heads, the model captures diverse relationship patterns: syntactic dependencies, semantic associations, and long-range context simultaneously.`;
+        } else if (layer.type === 'feed_forward') {
+          const cfg = a.config as Record<string, unknown> | undefined;
+          const dFF = cfg?.dFF as number || 0;
+          const dModel = cfg?.dModel as number || 0;
+          const act = cfg?.activation as string || 'gelu';
+          text = `[${label}] Feed-forward network expanding from ${dModel} to ${dFF} dimensions with ${act.toUpperCase()} activation, then projecting back to ${dModel}. This is where factual knowledge is stored — each FFN acts like a learned lookup table.`;
+        } else {
+          // Fallback to generic narration for other types
+          const generic = layerNarrations[layer.type];
+          text = generic ? `[${label}] ${generic}` : `[${label}] Layer ${layerIndex + 1} of ${totalLayers} in this ${currentModel.type.toUpperCase()} network.`;
         }
+
+        setNarration(text, 'layer');
       }
     } else if (!selectedLayerId) {
       prevLayerRef.current = null;
