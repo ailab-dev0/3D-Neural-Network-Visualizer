@@ -82,6 +82,11 @@ class VoiceNarrator {
     this.speaking = false;
   }
 
+  /** Cancel current speech to prepare for new speech. Alias for stop(). */
+  cancel(): void {
+    this.stop();
+  }
+
   /** Enable or disable voice narration. Disabling also stops current speech. */
   setEnabled(enabled: boolean): void {
     this.enabled = enabled;

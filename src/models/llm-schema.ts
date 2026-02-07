@@ -46,12 +46,14 @@ export interface LLMModel {
 /** Generate layers for a transformer model */
 function generateTransformerLayers(config: TransformerConfig): TransformerLayer[] {
   const layers: TransformerLayer[] = [];
+  const dK = Math.floor(config.dModel / config.nHeads);
+  const archLabel = config.architecture === 'encoder-only' ? 'Encoder' : 'Decoder';
 
   layers.push({
     id: 'embedding',
     layerIndex: 0,
     type: 'embedding',
-    label: `Token Embedding (${config.vocabSize} → ${config.dModel})`,
+    label: `Token Embedding — Vocabulary ${config.vocabSize.toLocaleString()} → ${config.dModel}-dim vectors`,
     config: { dModel: config.dModel },
   });
 
@@ -59,16 +61,18 @@ function generateTransformerLayers(config: TransformerConfig): TransformerLayer[
     id: 'pos_encoding',
     layerIndex: 1,
     type: 'positional_encoding',
-    label: `Positional Encoding (max ${config.maxSeqLen})`,
+    label: `Positional Encoding — Sequence position info (max ${config.maxSeqLen.toLocaleString()} tokens)`,
     config: { dModel: config.dModel },
   });
 
   for (let i = 0; i < config.nLayers; i++) {
+    const blockNum = i + 1;
+
     layers.push({
       id: `layer_${i}_ln1`,
       layerIndex: 2 + i * 4,
       type: 'layer_norm',
-      label: `Layer ${i} Pre-Attention Norm`,
+      label: `${archLabel} Block ${blockNum} — Pre-Attention LayerNorm (stabilize gradients)`,
       config: { dModel: config.dModel },
     });
 
@@ -76,7 +80,7 @@ function generateTransformerLayers(config: TransformerConfig): TransformerLayer[
       id: `layer_${i}_attn`,
       layerIndex: 3 + i * 4,
       type: 'attention',
-      label: `Layer ${i} Multi-Head Attention (${config.nHeads} heads)`,
+      label: `${archLabel} Block ${blockNum} — Self-Attention (${config.nHeads} heads, d_k=${dK})`,
       config: { nHeads: config.nHeads, dModel: config.dModel },
     });
 
@@ -84,7 +88,7 @@ function generateTransformerLayers(config: TransformerConfig): TransformerLayer[
       id: `layer_${i}_ln2`,
       layerIndex: 4 + i * 4,
       type: 'layer_norm',
-      label: `Layer ${i} Pre-FFN Norm`,
+      label: `${archLabel} Block ${blockNum} — Pre-FFN LayerNorm (stabilize gradients)`,
       config: { dModel: config.dModel },
     });
 
@@ -92,7 +96,7 @@ function generateTransformerLayers(config: TransformerConfig): TransformerLayer[
       id: `layer_${i}_ff`,
       layerIndex: 5 + i * 4,
       type: 'feed_forward',
-      label: `Layer ${i} FFN (${config.dModel} → ${config.dFF} → ${config.dModel})`,
+      label: `${archLabel} Block ${blockNum} — Feed-Forward Network (${config.dModel} → ${config.dFF} → ${config.dModel}, GELU)`,
       config: { dModel: config.dModel, dFF: config.dFF, activation: 'gelu' },
     });
   }
@@ -101,7 +105,7 @@ function generateTransformerLayers(config: TransformerConfig): TransformerLayer[
     id: 'output',
     layerIndex: 2 + config.nLayers * 4,
     type: 'output',
-    label: `Output (${config.vocabSize} logits)`,
+    label: `Output Projection — Logits over ${config.vocabSize.toLocaleString()} token vocabulary`,
     config: { dModel: config.dModel },
   });
 

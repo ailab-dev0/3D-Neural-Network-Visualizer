@@ -212,7 +212,7 @@ export default function App() {
       <header
         className="absolute top-0 right-0 z-50 pointer-events-none"
         style={{
-          left: sidebarOpen ? '290px' : '0px',
+          left: sidebarOpen ? '310px' : '0px',
           background: 'linear-gradient(to bottom, rgba(8, 8, 13, 0.85) 0%, rgba(8, 8, 13, 0.6) 40%, rgba(8, 8, 13, 0.2) 70%, transparent 100%)',
           transition: 'left 300ms ease',
         }}
@@ -245,7 +245,7 @@ export default function App() {
         <div
           className="absolute inset-0"
           style={{
-            left: sidebarOpen ? '290px' : '0px',
+            left: sidebarOpen ? '310px' : '0px',
             transition: 'left 300ms ease',
           }}
         >

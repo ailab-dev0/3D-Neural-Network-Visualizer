@@ -212,7 +212,9 @@ export default function NarrationPanel() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const simulationStepsRef = useRef<SimulationStep[]>([]);
   const simulationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastSpokenStepRef = useRef<number>(-1);
   const prevPresetRef = useRef<string | null>(null);
   const prevLayerRef = useRef<string | null>(null);
   const prevWeightsRef = useRef(showWeights);
@@ -247,15 +249,21 @@ export default function NarrationPanel() {
   }, []);
 
   // Speak narrations when they change (non-simulation narrations)
+  // NOTE: voiceEnabled is intentionally NOT in the dependency array.
+  // We check it imperatively so that toggling voice on/off does not
+  // re-speak the current narration text.
   useEffect(() => {
-    if (!narrationEnabled || !currentNarration || !voiceEnabled) return;
+    if (!narrationEnabled || !currentNarration) return;
+    const state = useNarrationStore.getState();
     // Only auto-speak non-simulation narrations here.
     // Simulation narrations are handled by the simulation flow.
-    const state = useNarrationStore.getState();
     if (state.simulationRunning) return;
+    if (!state.voiceEnabled) return;
 
+    voiceNarrator.cancel();
     voiceNarrator.speak(currentNarration);
-  }, [currentNarration, narrationEnabled, voiceEnabled]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentNarration, narrationEnabled]);
 
   // Stop voice when narration is disabled or voice is toggled off
   useEffect(() => {
@@ -418,6 +426,7 @@ export default function NarrationPanel() {
     if (steps.length === 0) return;
 
     simulationStepsRef.current = steps;
+    lastSpokenStepRef.current = -1;
     startSimulation(steps.length);
 
     // Start visualization: play animation and enable data flow
@@ -434,8 +443,10 @@ export default function NarrationPanel() {
     setNarration(firstStep.text, 'simulation');
     selectLayer(currentModel.layers[firstStep.layerIndex]?.id ?? null);
 
-    // Speak the first step with voice
+    // Speak the first step with voice (mark as spoken to prevent duplicate)
+    lastSpokenStepRef.current = 0;
     if (voiceEnabled) {
+      voiceNarrator.cancel();
       voiceNarrator.speak(firstStep.text);
     }
   }, [currentModel, startSimulation, setNarration, selectLayer, play, toggleDataFlowFn, voiceEnabled]);
@@ -447,6 +458,10 @@ export default function NarrationPanel() {
     const steps = simulationStepsRef.current;
     const currentStep = steps[simulationStep];
     if (!currentStep) return;
+
+    // If this step was already spoken (e.g. by runSimulation or a prior advance()),
+    // skip re-triggering speech. Just set up the timer to wait and advance.
+    const alreadySpoken = lastSpokenStepRef.current === simulationStep;
 
     // Determine wait time: use step duration, but if voice is enabled,
     // use a minimum that allows speech to complete (with a timeout cap)
@@ -466,50 +481,74 @@ export default function NarrationPanel() {
 
       if (pollInterval) clearInterval(pollInterval);
       if (simulationTimerRef.current) clearTimeout(simulationTimerRef.current);
+      if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
 
       const stepsLocal = simulationStepsRef.current;
       const stepLocal = simulationStep;
 
       if (stepLocal < stepsLocal.length - 1) {
-        advanceSimulation();
         const nextStep = stepsLocal[stepLocal + 1];
         if (nextStep && currentModel) {
           setNarration(nextStep.text, 'simulation');
           selectLayer(currentModel.layers[nextStep.layerIndex]?.id ?? null);
 
-          // Speak the next step
+          // Cancel any ongoing speech, then speak the next step
+          // Mark as spoken BEFORE calling advanceSimulation to prevent
+          // the re-triggered effect from speaking it again
+          lastSpokenStepRef.current = stepLocal + 1;
           if (useNarrationStore.getState().voiceEnabled) {
+            voiceNarrator.cancel();
             voiceNarrator.speak(nextStep.text);
           }
         }
+        advanceSimulation();
       } else {
         // Last step finished
+        lastSpokenStepRef.current = -1;
         if (useNarrationStore.getState().voiceEnabled) {
+          voiceNarrator.cancel();
           voiceNarrator.speak('Simulation complete.');
         }
         stopSimulation();
       }
     }
 
+    if (voiceActive && !alreadySpoken) {
+      // Speech was not yet triggered for this step — speak it now
+      // (This handles edge cases where the effect runs for a step
+      //  that wasn't spoken by advance(), e.g. external step changes)
+      lastSpokenStepRef.current = simulationStep;
+      voiceNarrator.cancel();
+      voiceNarrator.speak(currentStep.text);
+    }
+
     if (voiceActive) {
       // Wait for speech to finish, with a maximum timeout
       pollInterval = setInterval(() => {
         if (!voiceNarrator.isSpeaking()) {
-          if (pollInterval) clearInterval(pollInterval);
+          if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
+          }
           // Small pause between steps for natural pacing
           simulationTimerRef.current = setTimeout(advance, 1500);
         }
       }, 150);
 
-      // Safety timeout
-      simulationTimerRef.current = setTimeout(() => {
-        if (pollInterval) clearInterval(pollInterval);
+      // Safety timeout — stored in a SEPARATE ref to avoid overwriting
+      // the poll-triggered timeout stored in simulationTimerRef
+      safetyTimerRef.current = setTimeout(() => {
+        if (pollInterval) {
+          clearInterval(pollInterval);
+          pollInterval = null;
+        }
         advance();
       }, maxWait);
 
       return () => {
         if (pollInterval) clearInterval(pollInterval);
         if (simulationTimerRef.current) clearTimeout(simulationTimerRef.current);
+        if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
       };
     } else {
       // No voice: use original duration-based timing
@@ -524,6 +563,9 @@ export default function NarrationPanel() {
   // Stop voice when simulation stops
   const handleStopSimulation = useCallback(() => {
     voiceNarrator.stop();
+    lastSpokenStepRef.current = -1;
+    if (simulationTimerRef.current) clearTimeout(simulationTimerRef.current);
+    if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
     stopSimulation();
   }, [stopSimulation]);
 

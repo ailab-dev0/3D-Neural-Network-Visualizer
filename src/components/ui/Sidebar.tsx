@@ -79,12 +79,6 @@ const MODEL_TYPE_LABELS: Record<ModelType, string> = {
   llm: 'Large Language Models',
 };
 
-const MODEL_TYPE_SHORT: Record<ModelType, string> = {
-  ann: 'ANN',
-  cnn: 'CNN',
-  llm: 'LLM',
-};
-
 const MODEL_TYPE_COLORS: Record<ModelType, string> = {
   ann: 'var(--accent-purple)',
   cnn: 'var(--accent-orange)',
@@ -139,30 +133,30 @@ function ModelsTab() {
   }));
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-5">
       {groups.map(({ type, presets }) => (
         <div key={type}>
           <h3
-            className="text-[11px] font-bold uppercase tracking-[0.14em] mb-3 flex items-center gap-2.5 pb-2"
+            className="text-[10px] font-bold uppercase tracking-[0.12em] mb-2 flex items-center gap-2 pb-1.5"
             style={{
               color: MODEL_TYPE_COLORS[type],
               borderBottom: `1px solid color-mix(in srgb, ${MODEL_TYPE_COLORS[type]} 15%, transparent)`,
             }}
           >
             <span
-              className="w-2 h-2 rounded-full"
-              style={{ background: MODEL_TYPE_COLORS[type], boxShadow: `0 0 8px ${MODEL_TYPE_GLOWS[type]}` }}
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ background: MODEL_TYPE_COLORS[type], boxShadow: `0 0 6px ${MODEL_TYPE_GLOWS[type]}` }}
             />
             {MODEL_TYPE_LABELS[type]}
           </h3>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1">
             {presets.map((preset) => {
               const isActive = currentPresetId === preset.id;
               return (
                 <button
                   key={preset.id}
                   onClick={() => loadPreset(preset.id)}
-                  className={`preset-card preset-card-${type} w-full text-left px-4 py-3 rounded-xl cursor-pointer ${isActive ? 'preset-card-active' : ''}`}
+                  className={`preset-card preset-card-${type} w-full text-left px-3 py-2 rounded-lg cursor-pointer ${isActive ? 'preset-card-active' : ''}`}
                   style={{
                     background: isActive
                       ? `linear-gradient(135deg, color-mix(in srgb, ${MODEL_TYPE_COLORS[type]} 14%, transparent), color-mix(in srgb, ${MODEL_TYPE_COLORS[type]} 6%, transparent))`
@@ -176,14 +170,14 @@ function ModelsTab() {
                 >
                   <div className="flex items-center justify-between gap-2">
                     <div
-                      className={`text-[13px] ${isActive ? 'font-bold' : 'font-semibold'} leading-tight`}
+                      className={`text-[12px] ${isActive ? 'font-bold' : 'font-medium'} leading-tight truncate`}
                       style={{ color: isActive ? MODEL_TYPE_COLORS[type] : 'var(--text-primary)' }}
                     >
                       {preset.name}
                     </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="flex items-center gap-1 shrink-0">
                       <span
-                        className="text-[9px] font-mono px-1.5 py-0.5 rounded-md"
+                        className="text-[8px] font-mono px-1 py-0.5 rounded"
                         style={{
                           color: 'var(--text-muted)',
                           background: 'rgba(255, 255, 255, 0.04)',
@@ -191,20 +185,13 @@ function ModelsTab() {
                       >
                         {PRESET_LAYER_COUNTS[preset.id]}L
                       </span>
-                      <span
-                        className="text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase"
-                        style={{
-                          color: MODEL_TYPE_COLORS[type],
-                          background: `color-mix(in srgb, ${MODEL_TYPE_COLORS[type]} 10%, transparent)`,
-                        }}
-                      >
-                        {MODEL_TYPE_SHORT[type]}
-                      </span>
                     </div>
                   </div>
-                  <div className="text-[10px] mt-1 opacity-70 leading-snug" style={{ color: 'var(--text-muted)' }}>
-                    {preset.description}
-                  </div>
+                  {isActive && (
+                    <div className="text-[10px] mt-1 leading-snug" style={{ color: 'var(--text-muted)', opacity: 0.8 }}>
+                      {preset.description}
+                    </div>
+                  )}
                 </button>
               );
             })}
@@ -619,7 +606,7 @@ export default function Sidebar() {
       <div
         className="sidebar-container h-full flex flex-col overflow-hidden"
         style={{
-          width: '290px',
+          width: '310px',
           transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
           background: 'linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%)',
           borderRight: '1px solid var(--border)',
