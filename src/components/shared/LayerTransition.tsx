@@ -38,16 +38,20 @@ export default function LayerTransition({
   const animationState = useVisualizationStore((s) => s.animationState);
   const connectionOpacity = useVisualizationStore((s) => s.connectionOpacity);
 
+  // Destructure start and end into scalar values so useMemo dependencies are stable
+  const [sx, sy, sz] = start;
+  const [ex, ey, ez] = end;
+
   // Build a quadratic bezier curve between start and end with a gentle arc
   const curve = useMemo(() => {
-    const startV = new THREE.Vector3(...start);
-    const endV = new THREE.Vector3(...end);
+    const startV = new THREE.Vector3(sx, sy, sz);
+    const endV = new THREE.Vector3(ex, ey, ez);
     const mid = new THREE.Vector3().lerpVectors(startV, endV, 0.5);
     // Arc upward proportional to distance
     const dist = startV.distanceTo(endV);
     mid.y += dist * 0.12;
     return new THREE.QuadraticBezierCurve3(startV, mid, endV);
-  }, [start, end]);
+  }, [sx, sy, sz, ex, ey, ez]);
 
   // Create tube geometry along the curve
   const tubeGeometry = useMemo(() => {

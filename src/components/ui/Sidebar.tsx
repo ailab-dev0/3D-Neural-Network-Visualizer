@@ -435,7 +435,7 @@ function ToggleSetting({ label, checked, onChange }: {
   label: string; checked: boolean; onChange: () => void;
 }) {
   return (
-    <label className="flex items-center justify-between cursor-pointer group">
+    <div className="flex items-center justify-between cursor-pointer group">
       <span
         className="text-[13px]"
         style={{ color: checked ? 'var(--text-primary)' : 'var(--text-secondary)' }}
@@ -452,7 +452,7 @@ function ToggleSetting({ label, checked, onChange }: {
         aria-checked={checked}
         role="switch"
       />
-    </label>
+    </div>
   );
 }
 
@@ -497,15 +497,15 @@ export default function Sidebar() {
       <div
         className="sidebar-container h-full flex flex-col overflow-hidden"
         style={{
-          width: sidebarOpen ? '290px' : '0px',
+          width: '290px',
+          transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
           background: 'linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%)',
-          borderRight: sidebarOpen ? '1px solid var(--border)' : 'none',
-          boxShadow: sidebarOpen ? '4px 0 24px rgba(0, 0, 0, 0.3)' : 'none',
+          borderRight: '1px solid var(--border)',
+          boxShadow: '4px 0 24px rgba(0, 0, 0, 0.3)',
         }}
       >
         <div
           className="sidebar-content flex flex-col h-full"
-          data-collapsed={!sidebarOpen}
         >
           {/* Header */}
           <div className="px-5 pt-5 pb-3 shrink-0">

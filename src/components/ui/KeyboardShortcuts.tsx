@@ -7,6 +7,7 @@ const SHORTCUTS = [
   { key: 'W', description: 'Toggle weights' },
   { key: 'F', description: 'Toggle data flow' },
   { key: 'C', description: 'Toggle cognitive light cone' },
+  { key: 'N', description: 'Toggle narration panel' },
   { key: '1', description: 'Switch to ANN tab' },
   { key: '2', description: 'Switch to CNN tab' },
   { key: '3', description: 'Switch to LLM tab' },
@@ -91,7 +92,6 @@ export default function KeyboardShortcuts() {
               className="flex items-center justify-between gap-6 py-2 px-2 rounded-lg"
               style={{
                 background: i % 2 === 0 ? 'rgba(255, 255, 255, 0.02)' : 'transparent',
-                animationDelay: `${i * 30}ms`,
               }}
             >
               <span className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>

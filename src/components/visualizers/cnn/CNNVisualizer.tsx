@@ -5,7 +5,6 @@ import * as THREE from 'three';
 import type { CNNModel, CNNLayer } from '../../../models/cnn-schema';
 import { useVisualizationStore } from '../../../stores/visualizationStore';
 import { COLORS } from '../../../utils/colors';
-import LayerTransition from '../../shared/LayerTransition';
 
 interface CNNVisualizerProps {
   model: CNNModel;
@@ -228,20 +227,10 @@ export default function CNNVisualizer({ model }: CNNVisualizerProps) {
             />
 
             {/* Arrow head */}
-            <mesh position={[0, 0, endZ]} rotation={[Math.PI / 2, 0, 0]}>
+            <mesh position={[0, 0, endZ]} rotation={[-Math.PI / 2, 0, 0]}>
               <coneGeometry args={[0.15, 0.3, 8]} />
               <meshBasicMaterial color="#4fc3f7" transparent opacity={0.5} />
             </mesh>
-
-            {/* Animated data flow between layers */}
-            <LayerTransition
-              start={[0, 0, startZ]}
-              end={[0, 0, endZ]}
-              particleCount={5}
-              color={getLayerColor(layer.type)}
-              tubeRadius={0.025}
-              particleSize={0.07}
-            />
           </group>
         );
       })}

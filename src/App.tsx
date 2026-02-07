@@ -7,12 +7,14 @@ import PlaybackControls from './components/ui/PlaybackControls';
 import LayerInspector from './components/ui/LayerInspector';
 import ModelInfo from './components/ui/ModelInfo';
 import KeyboardShortcuts from './components/ui/KeyboardShortcuts';
+import NarrationPanel from './components/ui/NarrationPanel';
 import ANNVisualizer from './components/visualizers/ann/ANNVisualizer';
 import CNNVisualizer from './components/visualizers/cnn/CNNVisualizer';
 import LLMVisualizer from './components/visualizers/llm/LLMVisualizer';
 import { useModelStore } from './stores/modelStore';
 import { useVisualizationStore } from './stores/visualizationStore';
 import { useUIStore } from './stores/uiStore';
+import { useNarrationStore } from './stores/narrationStore';
 import ErrorBoundary from './components/shared/ErrorBoundary';
 import type { ANNModel } from './models/ann-schema';
 import type { CNNModel } from './models/cnn-schema';
@@ -118,6 +120,7 @@ function useKeyboardShortcuts() {
     useVisualizationStore();
   const { setSidebarTab } = useUIStore();
   const { setModelType } = useModelStore();
+  const { toggleNarration } = useNarrationStore();
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -153,6 +156,10 @@ function useKeyboardShortcuts() {
         case 'C':
           toggleLightCone();
           break;
+        case 'n':
+        case 'N':
+          toggleNarration();
+          break;
         case '1':
           setModelType('ann');
           setSidebarTab('models');
@@ -170,7 +177,7 @@ function useKeyboardShortcuts() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [animationState, autoRotate, play, pause, toggleLabels, toggleWeights, toggleDataFlow, toggleLightCone, setAutoRotate, setSidebarTab, setModelType]);
+  }, [animationState, autoRotate, play, pause, toggleLabels, toggleWeights, toggleDataFlow, toggleLightCone, setAutoRotate, setSidebarTab, setModelType, toggleNarration]);
 }
 
 export default function App() {
@@ -226,6 +233,7 @@ export default function App() {
       <PlaybackControls />
       <LayerInspector />
       <ModelInfo />
+      <NarrationPanel />
       <KeyboardShortcuts />
     </div>
   );

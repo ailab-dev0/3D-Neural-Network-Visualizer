@@ -1,6 +1,8 @@
 import { useVisualizationStore } from '../../stores/visualizationStore';
+import { useModelStore } from '../../stores/modelStore';
 
 export default function PlaybackControls() {
+  const currentModel = useModelStore((s) => s.currentModel);
   const animationState = useVisualizationStore((s) => s.animationState);
   const animationSpeed = useVisualizationStore((s) => s.animationSpeed);
   const showDataFlow = useVisualizationStore((s) => s.showDataFlow);
@@ -17,6 +19,8 @@ export default function PlaybackControls() {
 
   const isPlaying = animationState === 'playing';
   const speedPct = ((animationSpeed - 0.1) / 2.9) * 100;
+
+  if (!currentModel) return null;
 
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
@@ -49,16 +53,13 @@ export default function PlaybackControls() {
           {/* Play / Pause */}
           <button
             onClick={isPlaying ? pause : play}
-            className={`transport-btn w-12 h-12 flex items-center justify-center rounded-2xl cursor-pointer ${isPlaying ? 'play-pulse' : ''}`}
+            className={`transport-btn w-12 h-12 flex items-center justify-center rounded-2xl cursor-pointer ${isPlaying ? 'play-pulse' : 'play-btn-idle'}`}
             style={{
               background: isPlaying
                 ? 'linear-gradient(135deg, rgba(79, 195, 247, 0.2), rgba(79, 195, 247, 0.1))'
                 : 'linear-gradient(135deg, rgba(105, 240, 174, 0.2), rgba(105, 240, 174, 0.1))',
               color: isPlaying ? 'var(--accent-blue)' : 'var(--accent-green)',
               border: `1px solid ${isPlaying ? 'rgba(79, 195, 247, 0.3)' : 'rgba(105, 240, 174, 0.3)'}`,
-              boxShadow: isPlaying
-                ? '0 0 20px rgba(79, 195, 247, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
-                : '0 0 20px rgba(105, 240, 174, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
             }}
             title={isPlaying ? 'Pause' : 'Play'}
           >

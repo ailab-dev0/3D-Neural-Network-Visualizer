@@ -5,7 +5,6 @@ import * as THREE from 'three';
 import type { LLMModel, TransformerLayer } from '../../../models/llm-schema';
 import { useVisualizationStore } from '../../../stores/visualizationStore';
 import { COLORS, ATTENTION_HEAD_COLORS } from '../../../utils/colors';
-import LayerTransition from '../../shared/LayerTransition';
 
 interface LLMVisualizerProps {
   model: LLMModel;
@@ -421,35 +420,6 @@ export default function LLMVisualizer({ model }: LLMVisualizerProps) {
         );
       })}
 
-      {/* LayerTransition between consecutive transformer blocks */}
-      {blocks.slice(0, -1).map((block, i) => {
-        const nextBlock = blocks[i + 1];
-        const startY = block.yPosition - blockSpacing / 2 + 0.5;
-        const endY = nextBlock.yPosition + blockSpacing / 2 - 0.5;
-        return (
-          <LayerTransition
-            key={`block-transition-${block.index}`}
-            start={[0, startY, 0]}
-            end={[0, endY, 0]}
-            particleCount={4}
-            color={COLORS.attention}
-            tubeRadius={0.02}
-            particleSize={0.06}
-          />
-        );
-      })}
-
-      {/* Transition from input tokens to first block */}
-      {blocks.length > 0 && (
-        <LayerTransition
-          start={[0, -0.5, 0]}
-          end={[0, blocks[0].yPosition + blockSpacing / 2 - 0.5, 0]}
-          particleCount={3}
-          color={COLORS.embedding}
-          tubeRadius={0.02}
-          particleSize={0.05}
-        />
-      )}
     </group>
   );
 }

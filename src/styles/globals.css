@@ -113,17 +113,6 @@ input:focus-visible {
 }
 
 /* ============================================
-   INTERACTIVE ELEMENTS — Global transitions
-   ============================================ */
-button, a, [role="button"] {
-  transition: all var(--duration-normal) var(--ease-smooth);
-}
-
-button:active:not(:disabled) {
-  transform: scale(0.97);
-}
-
-/* ============================================
    GLASS PANEL — Premium glassmorphism
    ============================================ */
 .glass-panel {
@@ -154,21 +143,6 @@ button:active:not(:disabled) {
     var(--shadow-xl),
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
     inset 0 0 0 1px rgba(255, 255, 255, 0.03);
-}
-
-/* ============================================
-   GLOW EFFECTS
-   ============================================ */
-.glow-blue {
-  box-shadow: 0 0 20px var(--glow-blue), 0 0 60px rgba(79, 195, 247, 0.1);
-}
-
-.glow-purple {
-  box-shadow: 0 0 20px var(--glow-purple), 0 0 60px rgba(179, 136, 255, 0.1);
-}
-
-.glow-green {
-  box-shadow: 0 0 20px var(--glow-green), 0 0 60px rgba(105, 240, 174, 0.1);
 }
 
 /* ============================================
@@ -233,53 +207,6 @@ input[type="range"]::-moz-range-track {
    ANIMATIONS — Keyframes
    ============================================ */
 
-/* Empty state breathing */
-@keyframes empty-state-pulse {
-  0%, 100% { opacity: 0.3; transform: scale(1); }
-  50% { opacity: 0.55; transform: scale(1.05); }
-}
-
-.empty-state-icon {
-  animation: empty-state-pulse 3s ease-in-out infinite;
-}
-
-/* Empty state neural path drawing */
-@keyframes draw-path {
-  0% { stroke-dashoffset: 200; }
-  100% { stroke-dashoffset: 0; }
-}
-
-.empty-state-path {
-  stroke-dasharray: 200;
-  stroke-dashoffset: 200;
-  animation: draw-path 3s ease-in-out infinite alternate;
-}
-
-/* Empty state node pulse */
-@keyframes node-pulse {
-  0%, 100% { opacity: 0.3; r: 3; }
-  50% { opacity: 0.7; r: 4.5; }
-}
-
-/* Shimmer — premium loading effect */
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-.shimmer {
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.04) 25%,
-    rgba(255, 255, 255, 0.08) 50%,
-    rgba(255, 255, 255, 0.04) 75%,
-    transparent 100%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 2.5s ease-in-out infinite;
-}
-
 /* Title glow shimmer */
 @keyframes title-shimmer {
   0%, 100% {
@@ -306,16 +233,6 @@ input[type="range"]::-moz-range-track {
   animation: title-shimmer 6s ease-in-out infinite;
 }
 
-/* Pulsing glow for active elements */
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 4px var(--glow-color, var(--glow-blue)); }
-  50% { box-shadow: 0 0 16px var(--glow-color, var(--glow-blue)), 0 0 32px var(--glow-color-spread, rgba(79, 195, 247, 0.1)); }
-}
-
-.pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
-}
-
 /* Play button pulsing */
 @keyframes play-pulse {
   0%, 100% {
@@ -330,6 +247,10 @@ input[type="range"]::-moz-range-track {
 
 .play-pulse {
   animation: play-pulse 2s ease-in-out infinite;
+}
+
+.play-btn-idle {
+  box-shadow: 0 0 20px rgba(105, 240, 174, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 /* Slide-in from right */
@@ -388,31 +309,6 @@ input[type="range"]::-moz-range-track {
 
 .fade-up {
   animation: fade-up var(--duration-slow) var(--ease-out-expo) both;
-}
-
-/* Tab indicator slide */
-@keyframes tab-slide {
-  0% { opacity: 0.5; }
-  100% { opacity: 1; }
-}
-
-/* Gradient underline for header */
-.gradient-underline::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 120px;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    var(--accent-blue) 30%,
-    var(--accent-purple) 70%,
-    transparent
-  );
-  opacity: 0.6;
 }
 
 /* ============================================
@@ -547,24 +443,7 @@ input[type="range"]::-moz-range-track {
    SIDEBAR — Smooth transitions
    ============================================ */
 .sidebar-container {
-  transition: width var(--duration-slow) var(--ease-out-expo),
-              opacity var(--duration-normal) var(--ease-smooth);
-}
-
-.sidebar-content {
-  transition: opacity var(--duration-normal) var(--ease-smooth),
-              transform var(--duration-slow) var(--ease-out-expo);
-}
-
-.sidebar-content[data-collapsed="true"] {
-  opacity: 0;
-  transform: translateX(-12px);
-  pointer-events: none;
-}
-
-.sidebar-content[data-collapsed="false"] {
-  opacity: 1;
-  transform: translateX(0);
+  transition: transform 300ms ease;
 }
 
 /* ============================================
@@ -639,4 +518,60 @@ input[type="range"]::-moz-range-track {
 
 .detail-row + .detail-row {
   border-top: 1px solid var(--border-subtle);
+}
+
+/* ============================================
+   NARRATION PANEL — Typewriter & animations
+   ============================================ */
+
+/* Typewriter cursor blink */
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.narration-cursor {
+  display: inline;
+  color: var(--accent-cyan);
+  font-weight: 300;
+  animation: cursor-blink 0.8s ease-in-out infinite;
+  margin-left: 1px;
+}
+
+/* Panel entrance */
+@keyframes narration-panel-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.narration-panel-enter {
+  animation: narration-panel-enter var(--duration-slow) var(--ease-out-expo) both;
+}
+
+/* History entrance */
+@keyframes narration-history-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.narration-history-enter {
+  animation: narration-history-enter var(--duration-normal) var(--ease-out-expo) both;
+}
+
+/* Toggle button hover glow */
+.narration-toggle-btn:hover {
+  box-shadow: 0 0 16px rgba(0, 229, 255, 0.2);
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.18), rgba(0, 229, 255, 0.1)) !important;
 }

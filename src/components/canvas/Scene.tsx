@@ -1,7 +1,7 @@
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, Stars, PerformanceMonitor, Grid } from '@react-three/drei';
 import { Bloom, EffectComposer } from '@react-three/postprocessing';
-import { Suspense, useState, useEffect } from 'react';
+import { Suspense, useState, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { useVisualizationStore } from '../../stores/visualizationStore';
 import { useModelStore } from '../../stores/modelStore';
@@ -22,6 +22,7 @@ function CameraAutoAdjust() {
   const modelType = useModelStore((s) => s.modelType);
   const currentModel = useModelStore((s) => s.currentModel);
   const camera = useThree((s) => s.camera);
+  const frameRef = useRef<number>(0);
 
   useEffect(() => {
     if (!currentModel) return;
@@ -33,6 +34,11 @@ function CameraAutoAdjust() {
     const startPos = camera.position.clone();
     const startTime = Date.now();
     const duration = 1200; // ms
+
+    // Cancel any previous animation before starting a new one
+    if (frameRef.current) {
+      cancelAnimationFrame(frameRef.current);
+    }
 
     function animate() {
       const elapsed = Date.now() - startTime;
@@ -48,11 +54,18 @@ function CameraAutoAdjust() {
       }
 
       if (t < 1) {
-        requestAnimationFrame(animate);
+        frameRef.current = requestAnimationFrame(animate);
       }
     }
 
     animate();
+
+    // Cleanup: cancel the animation frame when effect re-runs or component unmounts
+    return () => {
+      if (frameRef.current) {
+        cancelAnimationFrame(frameRef.current);
+      }
+    };
   }, [modelType, currentModel, camera]);
 
   return null;
@@ -91,10 +104,10 @@ function SceneEnvironment() {
       <pointLight position={[-10, -10, -5]} intensity={0.4} color="#b388ff" />
       <directionalLight position={[0, 5, 5]} intensity={0.3} />
 
-      {/* Ambient fog for depth perception */}
-      <fog attach="fog" args={['#0a0a0f', 40, 120]} />
+      {/* Ambient fog for depth perception — extended range so large models aren't hidden */}
+      <fog attach="fog" args={['#0a0a0f', 60, 200]} />
 
-      <Stars radius={100} depth={50} count={3000} factor={3} saturation={0.5} fade speed={0.5} />
+      <Stars radius={100} depth={50} count={1500} factor={3} saturation={0.5} fade speed={0.5} />
 
       <GridFloor />
       <CameraAutoAdjust />

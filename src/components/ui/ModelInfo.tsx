@@ -30,7 +30,7 @@ export default function ModelInfo() {
 
   return (
     <div
-      className="fixed top-4 right-4 z-50 glass-panel rounded-xl overflow-hidden slide-in-right"
+      className="fixed bottom-20 right-4 z-50 glass-panel rounded-xl overflow-hidden slide-in-right"
       style={{ minWidth: '180px' }}
     >
       {/* Top accent line */}

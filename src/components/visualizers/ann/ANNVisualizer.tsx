@@ -8,8 +8,6 @@ import { calculateNeuronPositions, calculateLayerDepths } from '../../../utils/m
 import Neuron from '../../shared/Neuron';
 import Connection from '../../shared/Connection';
 import DataFlowParticle from '../../shared/DataFlowParticle';
-import ActivationGlow from '../../shared/ActivationGlow';
-import LayerTransition from '../../shared/LayerTransition';
 import CognitiveLightCone from '../../shared/CognitiveLightCone';
 
 interface ANNVisualizerProps {
@@ -25,6 +23,7 @@ interface LayerData {
 export default function ANNVisualizer({ model }: ANNVisualizerProps) {
   const showWeights = useVisualizationStore((s) => s.showWeights);
   const showLabels = useVisualizationStore((s) => s.showLabels);
+  const showDataFlow = useVisualizationStore((s) => s.showDataFlow);
   const selectedLayerId = useVisualizationStore((s) => s.selectedLayerId);
   const animationState = useVisualizationStore((s) => s.animationState);
   const isPlaying = animationState === 'playing';
@@ -206,26 +205,22 @@ export default function ANNVisualizer({ model }: ANNVisualizerProps) {
               </Text>
             )}
 
-            {/* Neurons wrapped with ActivationGlow */}
+            {/* Neurons rendered directly — no ActivationGlow wrapper */}
             {positions.map((pos, j) => (
-              <group key={`${layer.id}-${j}`} position={[pos.x, pos.y, pos.z]}>
-                <ActivationGlow
-                  activation={(0.3 + (j % 5) * 0.14 + coneActivationBoost) * layerOpacityScale}
-                  color={getLayerColor(layer)}
-                  glowScale={(layer.type === 'output' ? 2.0 : 1.6) * layerOpacityScale}
-                  phaseOffset={j * 0.7 + positions.length * 0.3}
-                >
-                  <Neuron
-                    position={[0, 0, 0]}
-                    color={getLayerColor(layer)}
-                    layerId={layer.id}
-                    neuronIndex={j}
-                    isSelected={selectedLayerId === layer.id}
-                    activation={lightConeActive ? (inCone ? 0.6 + coneActivationBoost : 0) : undefined}
-                    size={layer.type === 'input' ? 0.25 : layer.type === 'output' ? 0.35 : 0.3}
-                  />
-                </ActivationGlow>
-              </group>
+              <Neuron
+                key={`${layer.id}-${j}`}
+                position={[pos.x, pos.y, pos.z]}
+                color={getLayerColor(layer)}
+                layerId={layer.id}
+                neuronIndex={j}
+                isSelected={selectedLayerId === layer.id}
+                activation={
+                  lightConeActive
+                    ? (inCone ? (0.3 + (j % 5) * 0.14 + coneActivationBoost) * layerOpacityScale : 0)
+                    : (0.3 + (j % 5) * 0.14) * layerOpacityScale
+                }
+                size={layer.type === 'input' ? 0.25 : layer.type === 'output' ? 0.35 : 0.3}
+              />
             ))}
           </group>
         );
@@ -251,8 +246,8 @@ export default function ANNVisualizer({ model }: ANNVisualizerProps) {
         );
       })}
 
-      {/* Data flow particles — always visible */}
-      {particleData.map(({ layerIdx, index, fromPos, toPos, speed }) => (
+      {/* Data flow particles — gated by showDataFlow toggle */}
+      {showDataFlow && particleData.map(({ layerIdx, index, fromPos, toPos, speed }) => (
         <DataFlowParticle
           key={`particle-${layerIdx}-${index}`}
           start={[fromPos.x, fromPos.y, fromPos.z]}
@@ -261,24 +256,6 @@ export default function ANNVisualizer({ model }: ANNVisualizerProps) {
           delay={index * 0.7}
         />
       ))}
-
-      {/* Layer transitions — animated particle streams between consecutive layers */}
-      {layerData.slice(0, -1).map(({ layer, depth }, i) => {
-        const nextLayer = layerData[i + 1];
-        const startPos: [number, number, number] = [0, 0, depth];
-        const endPos: [number, number, number] = [0, 0, nextLayer.depth];
-        return (
-          <LayerTransition
-            key={`transition-${layer.id}`}
-            start={startPos}
-            end={endPos}
-            particleCount={4}
-            color={getLayerColor(layer)}
-            tubeRadius={0.03}
-            particleSize={0.08}
-          />
-        );
-      })}
 
       {/* Cognitive Light Cone */}
       {lightConeActive && (
