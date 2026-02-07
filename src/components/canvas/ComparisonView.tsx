@@ -148,14 +148,14 @@ function PanelLabel({
   const paramCount = model.metadata?.parameters;
 
   return (
-    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
+    <div className="absolute top-16 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
       <div
         className="glass-panel rounded-xl px-4 py-2.5 flex items-center gap-3"
         style={{ minWidth: '180px' }}
       >
         {/* Side badge (A or B) */}
         <span
-          className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold"
+          className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold"
           style={{
             background: `color-mix(in srgb, ${badgeColor} 20%, transparent)`,
             border: `1px solid color-mix(in srgb, ${badgeColor} 40%, transparent)`,
@@ -169,7 +169,7 @@ function PanelLabel({
         <div className="flex flex-col gap-0.5 min-w-0">
           {/* Model name */}
           <span
-            className="text-sm font-semibold truncate"
+            className="text-base font-bold truncate"
             style={{ color: 'var(--text-primary, #e0e0e0)' }}
           >
             {model.name}

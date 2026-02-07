@@ -497,7 +497,7 @@ export default function NarrationPanel() {
         if (!voiceNarrator.isSpeaking()) {
           if (pollInterval) clearInterval(pollInterval);
           // Small pause between steps for natural pacing
-          simulationTimerRef.current = setTimeout(advance, 400);
+          simulationTimerRef.current = setTimeout(advance, 1500);
         }
       }, 150);
 
@@ -513,7 +513,7 @@ export default function NarrationPanel() {
       };
     } else {
       // No voice: use original duration-based timing
-      simulationTimerRef.current = setTimeout(advance, baseDuration);
+      simulationTimerRef.current = setTimeout(advance, baseDuration * 1.5);
 
       return () => {
         if (simulationTimerRef.current) clearTimeout(simulationTimerRef.current);

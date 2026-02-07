@@ -271,10 +271,10 @@ export default function App() {
 
       {/* UI Overlays */}
       <Sidebar />
-      <PlaybackControls />
-      <LayerInspector />
-      <ModelInfo />
-      <NarrationPanel />
+      {!showComparison && <PlaybackControls />}
+      {!showComparison && <LayerInspector />}
+      {!showComparison && <ModelInfo />}
+      {!showComparison && <NarrationPanel />}
       <KeyboardShortcuts />
     </div>
   );

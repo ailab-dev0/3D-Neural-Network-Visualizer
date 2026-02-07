@@ -37,13 +37,15 @@ export default function Neuron({
   const hoverLayer = useVisualizationStore((s) => s.hoverLayer);
 
   const scaledSize = size * neuronSize;
-  const emissiveIntensity = isSelected ? 2 : hovered ? 1.5 : 0.3 + activation * 1.2;
+  const emissiveIntensity = isSelected ? 4.0 : hovered ? 1.5 : 0.3 + activation * 1.2;
 
   useFrame(() => {
     if (meshRef.current) {
-      // Gentle pulse animation
-      const pulse = 1 + Math.sin(Date.now() * 0.002 + neuronIndex * 0.5) * 0.05;
-      meshRef.current.scale.setScalar(scaledSize * pulse);
+      const pulse = isSelected
+        ? 1 + Math.sin(Date.now() * 0.004) * 0.15  // Dramatic pulse when selected
+        : 1 + Math.sin(Date.now() * 0.002 + neuronIndex * 0.5) * 0.05;
+      const selectedScale = isSelected ? scaledSize * 1.4 : scaledSize;
+      meshRef.current.scale.setScalar(selectedScale * pulse);
     }
   });
 
@@ -67,7 +69,7 @@ export default function Neuron({
       >
         <meshStandardMaterial
           color={color}
-          emissive={color}
+          emissive={isSelected ? new THREE.Color('#00e5ff') : color}
           emissiveIntensity={emissiveIntensity}
           roughness={0.2}
           metalness={0.8}
@@ -77,11 +79,11 @@ export default function Neuron({
       </mesh>
 
       {/* Glow halo */}
-      <mesh geometry={SHARED_GLOW_GEOMETRY} scale={scaledSize * 1.4}>
+      <mesh geometry={SHARED_GLOW_GEOMETRY} scale={isSelected ? scaledSize * 2.2 : scaledSize * 1.4}>
         <meshBasicMaterial
-          color={color}
+          color={isSelected ? new THREE.Color('#00e5ff') : color}
           transparent
-          opacity={0.08 + activation * 0.12}
+          opacity={isSelected ? 0.25 : 0.08 + activation * 0.12}
           side={THREE.BackSide}
         />
       </mesh>

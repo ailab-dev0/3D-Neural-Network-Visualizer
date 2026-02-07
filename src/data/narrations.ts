@@ -192,7 +192,7 @@ export function generateANNSimulationSteps(
       steps.push({
         text: `Input data enters the network through ${layer.neurons} input neurons. Each neuron represents one feature of the input — for example, pixel intensities, sensor readings, or normalized measurements.`,
         layerIndex: i,
-        duration: 3000,
+        duration: 4500,
       });
     } else if (layer.type === 'hidden') {
       const act = layer.activation ?? 'linear';
@@ -208,7 +208,7 @@ export function generateANNSimulationSteps(
       steps.push({
         text: `Signals propagate through ${prev ? prev.neurons : '?'} weighted connections into "${layer.label || layer.id}" with ${layer.neurons} neurons. ${activationDesc}. Each neuron computes: output = activation(sum(weights * inputs) + bias).`,
         layerIndex: i,
-        duration: 3500,
+        duration: 5000,
       });
     } else if (layer.type === 'output') {
       const act = layer.activation ?? 'linear';
@@ -222,7 +222,7 @@ export function generateANNSimulationSteps(
       steps.push({
         text: `The output layer produces the final prediction with ${layer.neurons} neurons. ${outputDesc} The predicted class is whichever output neuron has the highest activation.`,
         layerIndex: i,
-        duration: 3500,
+        duration: 5000,
       });
     }
   }
@@ -230,7 +230,7 @@ export function generateANNSimulationSteps(
   steps.push({
     text: 'Forward pass complete! In training, the loss function now compares this prediction to the true label, and backpropagation calculates how to adjust every weight in the network to reduce the error.',
     layerIndex: layers.length - 1,
-    duration: 4000,
+    duration: 6000,
   });
 
   return steps;
@@ -250,7 +250,7 @@ export function generateCNNSimulationSteps(
         steps.push({
           text: `An image enters the network as a ${layer.width}x${layer.height} grid with ${layer.channels} channel${layer.channels === 1 ? '' : 's'}. ${layer.channels === 1 ? 'Each pixel is a grayscale intensity value.' : 'Each pixel has RGB color values.'} The CNN will process this spatial data while preserving its 2D structure.`,
           layerIndex: i,
-          duration: 3000,
+          duration: 4500,
         });
         break;
 
@@ -258,7 +258,7 @@ export function generateCNNSimulationSteps(
         steps.push({
           text: `${layer.filters} convolutional filters of size ${layer.kernelSize}x${layer.kernelSize} slide across the input, each learning to detect a different feature pattern. The output is ${layer.width}x${layer.height}x${layer.filters} — each filter produces one feature map showing where its learned pattern appears in the image.`,
           layerIndex: i,
-          duration: 3500,
+          duration: 5000,
         });
         break;
 
@@ -268,7 +268,7 @@ export function generateCNNSimulationSteps(
         steps.push({
           text: `${layer.type === 'maxpool' ? 'Max' : 'Average'} pooling with a ${layer.poolSize}x${layer.poolSize} window reduces the spatial dimensions by taking the ${poolType} value in each region. This provides translation invariance and reduces the feature map to ${layer.width}x${layer.height}, cutting computation for the next layer.`,
           layerIndex: i,
-          duration: 3000,
+          duration: 4500,
         });
         break;
       }
@@ -277,7 +277,7 @@ export function generateCNNSimulationSteps(
         steps.push({
           text: `Batch normalization standardizes the activations, making training more stable and allowing higher learning rates. It normalizes across the batch dimension and then applies learnable scale and shift parameters.`,
           layerIndex: i,
-          duration: 2500,
+          duration: 6000,
         });
         break;
 
@@ -285,7 +285,7 @@ export function generateCNNSimulationSteps(
         steps.push({
           text: `The 2D feature maps are flattened into a single vector of ${layer.neurons} values. This bridges the convolutional feature extraction stage with the fully-connected classification stage. All spatial structure is now encoded in the activation values.`,
           layerIndex: i,
-          duration: 2500,
+          duration: 6000,
         });
         break;
 
@@ -293,7 +293,7 @@ export function generateCNNSimulationSteps(
         steps.push({
           text: `A fully-connected layer with ${layer.neurons} neurons combines all the extracted features. Each neuron is connected to every element of the flattened vector, learning global patterns that the convolutional layers could not capture on their own.`,
           layerIndex: i,
-          duration: 3000,
+          duration: 4500,
         });
         break;
 
@@ -301,7 +301,7 @@ export function generateCNNSimulationSteps(
         steps.push({
           text: `The output layer classifies the image into one of ${layer.neurons} categories using softmax. The highest activation indicates the network's predicted class. The entire pipeline — from raw pixels to this prediction — was learned end-to-end from labeled training data.`,
           layerIndex: i,
-          duration: 3500,
+          duration: 5000,
         });
         break;
 
@@ -309,7 +309,7 @@ export function generateCNNSimulationSteps(
         steps.push({
           text: `Dropout randomly deactivates neurons during training to prevent overfitting. At inference time (like now), all neurons are active and weights are scaled to compensate. This regularization technique forces the network to learn robust, redundant features.`,
           layerIndex: i,
-          duration: 2500,
+          duration: 6000,
         });
         break;
     }
@@ -318,7 +318,7 @@ export function generateCNNSimulationSteps(
   steps.push({
     text: 'Forward pass complete! The CNN has transformed raw pixel data into a class prediction through a hierarchy of increasingly abstract feature representations — from edges to textures to object parts to whole objects.',
     layerIndex: layers.length - 1,
-    duration: 4000,
+    duration: 6000,
   });
 
   return steps;
@@ -342,7 +342,7 @@ export function generateLLMSimulationSteps(
         steps.push({
           text: `Input tokens are converted to ${config.dModel}-dimensional embedding vectors. Each of the ${config.vocabSize.toLocaleString()} possible tokens maps to a unique learned vector that captures its semantic meaning. Similar words will have similar embedding vectors.`,
           layerIndex: i,
-          duration: 3500,
+          duration: 5000,
         });
         break;
 
@@ -350,7 +350,7 @@ export function generateLLMSimulationSteps(
         steps.push({
           text: `Positional encodings are added to the token embeddings, giving the model a sense of token order. Without these, the model would treat "The cat sat on the mat" identically to "The mat sat on the cat." The maximum sequence length is ${config.maxSeqLen} tokens.`,
           layerIndex: i,
-          duration: 3000,
+          duration: 4500,
         });
         break;
 
@@ -361,7 +361,7 @@ export function generateLLMSimulationSteps(
           steps.push({
             text: `Entering Transformer Block ${transformerBlockCount} of ${config.nLayers}. Layer normalization first stabilizes the activations. This ${config.architecture} architecture processes all ${config.nLayers} blocks sequentially, each refining the representation.`,
             layerIndex: i,
-            duration: 2500,
+            duration: 6000,
           });
         }
         break;
@@ -370,7 +370,7 @@ export function generateLLMSimulationSteps(
         steps.push({
           text: `Multi-Head Self-Attention with ${config.nHeads} heads. Each head independently computes attention: which tokens should "look at" which other tokens. With ${config.dModel / config.nHeads}d per head, the model captures diverse relationship patterns — syntactic dependencies, semantic associations, and long-range context.`,
           layerIndex: i,
-          duration: 3500,
+          duration: 5000,
         });
         break;
 
@@ -379,7 +379,7 @@ export function generateLLMSimulationSteps(
         steps.push({
           text: `The Feed-Forward Network expands each token's representation to ${layer.config?.dFF ?? config.dModel * 4} dimensions with ${act.toUpperCase()} activation, then projects back to ${config.dModel}d. This is where much of the model's factual knowledge is stored — each FFN acts like a learned lookup table.`,
           layerIndex: i,
-          duration: 3000,
+          duration: 4500,
         });
         break;
       }
@@ -388,7 +388,7 @@ export function generateLLMSimulationSteps(
         steps.push({
           text: `The final output layer projects the ${config.dModel}-dimensional representations back to vocabulary size (${config.vocabSize.toLocaleString()}), producing a probability distribution over all possible next tokens. The token with the highest probability becomes the model's prediction.`,
           layerIndex: i,
-          duration: 3500,
+          duration: 5000,
         });
         break;
     }
@@ -397,7 +397,7 @@ export function generateLLMSimulationSteps(
   steps.push({
     text: `Forward pass complete! The ${config.architecture} transformer processed the input through ${config.nLayers} attention blocks, each allowing every token to gather context from the sequence. This "attention is all you need" mechanism is what makes transformers so effective for language understanding and generation.`,
     layerIndex: layers.length - 1,
-    duration: 4000,
+    duration: 6000,
   });
 
   return steps;
