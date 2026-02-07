@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-panel: #1a1a2e;
+  --accent-blue: #4fc3f7;
+  --accent-purple: #b388ff;
+  --accent-green: #69f0ae;
+  --accent-orange: #ffab40;
+  --accent-red: #ff5252;
+  --text-primary: #e0e0e0;
+  --text-secondary: #9e9e9e;
+  --text-muted: #616161;
+  --border: #2a2a3e;
+  --glow-blue: rgba(79, 195, 247, 0.3);
+  --glow-purple: rgba(179, 136, 255, 0.3);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Glow effects */
+.glow-blue {
+  box-shadow: 0 0 20px var(--glow-blue);
+}
+
+.glow-purple {
+  box-shadow: 0 0 20px var(--glow-purple);
+}
+
+/* Panel glass effect */
+.glass-panel {
+  background: rgba(26, 26, 46, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+}
