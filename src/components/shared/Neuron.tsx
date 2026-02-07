@@ -1,8 +1,12 @@
 import { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Sphere, Html } from '@react-three/drei';
+import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { useVisualizationStore } from '../../stores/visualizationStore';
+
+// Shared geometries at module level -- reused by all Neuron instances to save memory
+const SHARED_NEURON_GEOMETRY = new THREE.SphereGeometry(1, 16, 16);
+const SHARED_GLOW_GEOMETRY = new THREE.SphereGeometry(1, 12, 12);
 
 interface NeuronProps {
   position: [number, number, number];
@@ -45,9 +49,9 @@ export default function Neuron({
 
   return (
     <group position={position}>
-      <Sphere
+      <mesh
         ref={meshRef}
-        args={[1, 16, 16]}
+        geometry={SHARED_NEURON_GEOMETRY}
         scale={scaledSize}
         onClick={() => selectLayer(layerId)}
         onPointerEnter={() => {
@@ -70,17 +74,17 @@ export default function Neuron({
           transparent
           opacity={0.9}
         />
-      </Sphere>
+      </mesh>
 
       {/* Glow halo */}
-      <Sphere args={[1, 12, 12]} scale={scaledSize * 1.4}>
+      <mesh geometry={SHARED_GLOW_GEOMETRY} scale={scaledSize * 1.4}>
         <meshBasicMaterial
           color={color}
           transparent
           opacity={0.08 + activation * 0.12}
           side={THREE.BackSide}
         />
-      </Sphere>
+      </mesh>
 
       {showLabels && label && hovered && (
         <Html distanceFactor={15} style={{ pointerEvents: 'none' }}>

@@ -59,6 +59,16 @@ html, body, #root {
   box-shadow: 0 0 20px var(--glow-purple);
 }
 
+/* Subtle breathing animation for empty-state icon */
+@keyframes empty-state-pulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.06); }
+}
+
+.empty-state-icon {
+  animation: empty-state-pulse 3s ease-in-out infinite;
+}
+
 /* Panel glass effect */
 .glass-panel {
   background: rgba(26, 26, 46, 0.8);

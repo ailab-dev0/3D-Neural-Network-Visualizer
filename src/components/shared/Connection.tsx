@@ -1,7 +1,9 @@
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useVisualizationStore } from '../../stores/visualizationStore';
+
+const DEFAULT_COLOR = new THREE.Color('#4fc3f7');
 
 interface ConnectionProps {
   start: [number, number, number];
@@ -14,7 +16,7 @@ interface ConnectionProps {
 export default function Connection({
   start,
   end,
-  color = new THREE.Color('#4fc3f7'),
+  color = DEFAULT_COLOR,
   weight = 0.5,
   animated = false,
 }: ConnectionProps) {
@@ -23,9 +25,13 @@ export default function Connection({
 
   const absWeight = Math.abs(weight);
 
+  // Destructure to stable primitives so useMemo doesn't depend on array references
+  const [sx, sy, sz] = start;
+  const [ex, ey, ez] = end;
+
   const lineObj = useMemo(() => {
-    const startV = new THREE.Vector3(...start);
-    const endV = new THREE.Vector3(...end);
+    const startV = new THREE.Vector3(sx, sy, sz);
+    const endV = new THREE.Vector3(ex, ey, ez);
     const mid = new THREE.Vector3().lerpVectors(startV, endV, 0.5);
     mid.y += endV.distanceTo(startV) * 0.05;
     const curve = new THREE.QuadraticBezierCurve3(startV, mid, endV);
@@ -37,7 +43,15 @@ export default function Connection({
       opacity: connectionOpacity * absWeight,
     });
     return new THREE.Line(geometry, material);
-  }, [start, end, color, connectionOpacity, absWeight]);
+  }, [sx, sy, sz, ex, ey, ez, color, connectionOpacity, absWeight]);
+
+  // Dispose geometry and material on unmount or when lineObj changes
+  useEffect(() => {
+    return () => {
+      lineObj.geometry.dispose();
+      (lineObj.material as THREE.LineBasicMaterial).dispose();
+    };
+  }, [lineObj]);
 
   useFrame(() => {
     if (animated && lineRef.current) {

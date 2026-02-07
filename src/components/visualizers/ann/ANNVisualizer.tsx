@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 import type { ANNModel } from '../../../models/ann-schema';
@@ -47,6 +47,56 @@ export default function ANNVisualizer({ model }: ANNVisualizerProps) {
       default: return layer.activation ? getActivationColor(layer.activation) : COLORS.hidden;
     }
   };
+
+  // Pre-compute connection weights with stable random values (avoid Math.random() in render path)
+  const connectionData = useMemo(() => {
+    const result: { fromLayerId: string; fromPos: THREE.Vector3; toPos: THREE.Vector3; weight: number }[] = [];
+
+    for (let layerIdx = 0; layerIdx < layerData.length - 1; layerIdx++) {
+      const { layer: fromLayer, positions: fromPositions } = layerData[layerIdx];
+      const toData = layerData[layerIdx + 1];
+
+      const maxConns = Math.min(fromPositions.length * toData.positions.length, 200);
+      const skipFrom = Math.max(1, Math.floor(fromPositions.length / Math.sqrt(maxConns)));
+      const skipTo = Math.max(1, Math.floor(toData.positions.length / Math.sqrt(maxConns)));
+
+      for (let i = 0; i < fromPositions.length; i += skipFrom) {
+        for (let j = 0; j < toData.positions.length; j += skipTo) {
+          result.push({
+            fromLayerId: fromLayer.id,
+            fromPos: fromPositions[i],
+            toPos: toData.positions[j],
+            weight: 0.2 + Math.random() * 0.6,
+          });
+        }
+      }
+    }
+    return result;
+  }, [layerData]);
+
+  // Pre-compute data flow particle assignments with stable random values
+  const particleData = useMemo(() => {
+    const result: { layerIdx: number; index: number; fromPos: THREE.Vector3; toPos: THREE.Vector3; speed: number }[] = [];
+
+    for (let layerIdx = 0; layerIdx < layerData.length - 1; layerIdx++) {
+      const { positions: fromPositions } = layerData[layerIdx];
+      const toData = layerData[layerIdx + 1];
+
+      const count = Math.min(3, fromPositions.length);
+      for (let i = 0; i < count; i++) {
+        const fromIdx = Math.floor(Math.random() * fromPositions.length);
+        const toIdx = Math.floor(Math.random() * toData.positions.length);
+        result.push({
+          layerIdx,
+          index: i,
+          fromPos: fromPositions[fromIdx],
+          toPos: toData.positions[toIdx],
+          speed: 0.5 + Math.random() * 0.5,
+        });
+      }
+    }
+    return result;
+  }, [layerData]);
 
   return (
     <group>
@@ -98,60 +148,26 @@ export default function ANNVisualizer({ model }: ANNVisualizerProps) {
       ))}
 
       {/* Connections between layers */}
-      {showWeights && layerData.slice(0, -1).map(({ layer: fromLayer, positions: fromPositions }, layerIdx) => {
-        const toData = layerData[layerIdx + 1];
-        const connections: React.JSX.Element[] = [];
-
-        // Limit connections for performance
-        const maxConns = Math.min(fromPositions.length * toData.positions.length, 200);
-        const skipFrom = Math.max(1, Math.floor(fromPositions.length / Math.sqrt(maxConns)));
-        const skipTo = Math.max(1, Math.floor(toData.positions.length / Math.sqrt(maxConns)));
-
-        for (let i = 0; i < fromPositions.length; i += skipFrom) {
-          for (let j = 0; j < toData.positions.length; j += skipTo) {
-            const from = fromPositions[i];
-            const to = toData.positions[j];
-            const weight = 0.2 + Math.random() * 0.6; // Simulated weights
-
-            connections.push(
-              <Connection
-                key={`conn-${fromLayer.id}-${i}-${j}`}
-                start={[from.x, from.y, from.z]}
-                end={[to.x, to.y, to.z]}
-                weight={weight}
-                color={COLORS.hidden}
-              />
-            );
-          }
-        }
-        return connections;
-      })}
+      {showWeights && connectionData.map(({ fromLayerId, fromPos, toPos, weight }, connIdx) => (
+        <Connection
+          key={`conn-${fromLayerId}-${connIdx}`}
+          start={[fromPos.x, fromPos.y, fromPos.z]}
+          end={[toPos.x, toPos.y, toPos.z]}
+          weight={weight}
+          color={COLORS.hidden}
+        />
+      ))}
 
       {/* Data flow particles */}
-      {showDataFlow && layerData.slice(0, -1).map(({ positions: fromPositions }, layerIdx) => {
-        const toData = layerData[layerIdx + 1];
-        const particles: React.JSX.Element[] = [];
-
-        // Show a few animated particles per layer connection
-        const count = Math.min(3, fromPositions.length);
-        for (let i = 0; i < count; i++) {
-          const fromIdx = Math.floor(Math.random() * fromPositions.length);
-          const toIdx = Math.floor(Math.random() * toData.positions.length);
-          const from = fromPositions[fromIdx];
-          const to = toData.positions[toIdx];
-
-          particles.push(
-            <DataFlowParticle
-              key={`particle-${layerIdx}-${i}`}
-              start={[from.x, from.y, from.z]}
-              end={[to.x, to.y, to.z]}
-              speed={0.5 + Math.random() * 0.5}
-              delay={i * 0.7}
-            />
-          );
-        }
-        return particles;
-      })}
+      {showDataFlow && particleData.map(({ layerIdx, index, fromPos, toPos, speed }) => (
+        <DataFlowParticle
+          key={`particle-${layerIdx}-${index}`}
+          start={[fromPos.x, fromPos.y, fromPos.z]}
+          end={[toPos.x, toPos.y, toPos.z]}
+          speed={speed}
+          delay={index * 0.7}
+        />
+      ))}
     </group>
   );
 }

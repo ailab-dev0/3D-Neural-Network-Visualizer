@@ -1,13 +1,19 @@
 import './styles/globals.css';
 
+import { useEffect } from 'react';
 import Scene from './components/canvas/Scene';
 import Sidebar from './components/ui/Sidebar';
 import PlaybackControls from './components/ui/PlaybackControls';
 import LayerInspector from './components/ui/LayerInspector';
+import ModelInfo from './components/ui/ModelInfo';
+import KeyboardShortcuts from './components/ui/KeyboardShortcuts';
 import ANNVisualizer from './components/visualizers/ann/ANNVisualizer';
 import CNNVisualizer from './components/visualizers/cnn/CNNVisualizer';
 import LLMVisualizer from './components/visualizers/llm/LLMVisualizer';
 import { useModelStore } from './stores/modelStore';
+import { useVisualizationStore } from './stores/visualizationStore';
+import { useUIStore } from './stores/uiStore';
+import ErrorBoundary from './components/shared/ErrorBoundary';
 import type { ANNModel } from './models/ann-schema';
 import type { CNNModel } from './models/cnn-schema';
 import type { LLMModel } from './models/llm-schema';
@@ -37,7 +43,7 @@ function EmptyState() {
   return (
     <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
       <div className="text-center px-6">
-        <div style={{ color: 'var(--accent-blue)', opacity: 0.3 }}>
+        <div className="empty-state-icon" style={{ color: 'var(--accent-blue)' }}>
           <svg
             width="64"
             height="64"
@@ -67,7 +73,65 @@ function EmptyState() {
   );
 }
 
+function useKeyboardShortcuts() {
+  const { animationState, play, pause, toggleLabels, toggleWeights, toggleDataFlow, autoRotate, setAutoRotate } =
+    useVisualizationStore();
+  const { setSidebarTab } = useUIStore();
+  const { setModelType } = useModelStore();
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+      switch (e.key) {
+        case ' ':
+          e.preventDefault();
+          if (animationState === 'playing') {
+            pause();
+          } else {
+            play();
+          }
+          break;
+        case 'r':
+        case 'R':
+          setAutoRotate(!autoRotate);
+          break;
+        case 'l':
+        case 'L':
+          toggleLabels();
+          break;
+        case 'w':
+        case 'W':
+          toggleWeights();
+          break;
+        case 'f':
+        case 'F':
+          toggleDataFlow();
+          break;
+        case '1':
+          setModelType('ann');
+          setSidebarTab('models');
+          break;
+        case '2':
+          setModelType('cnn');
+          setSidebarTab('models');
+          break;
+        case '3':
+          setModelType('llm');
+          setSidebarTab('models');
+          break;
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [animationState, autoRotate, play, pause, toggleLabels, toggleWeights, toggleDataFlow, setAutoRotate, setSidebarTab, setModelType]);
+}
+
 export default function App() {
+  useKeyboardShortcuts();
+
   return (
     <div className="relative w-full h-full overflow-hidden">
       {/* Header */}
@@ -94,9 +158,11 @@ export default function App() {
 
       {/* 3D Canvas - full screen background */}
       <div className="absolute inset-0">
-        <Scene>
-          <NetworkVisualization />
-        </Scene>
+        <ErrorBoundary>
+          <Scene>
+            <NetworkVisualization />
+          </Scene>
+        </ErrorBoundary>
       </div>
 
       {/* Empty state */}
@@ -106,6 +172,8 @@ export default function App() {
       <Sidebar />
       <PlaybackControls />
       <LayerInspector />
+      <ModelInfo />
+      <KeyboardShortcuts />
     </div>
   );
 }

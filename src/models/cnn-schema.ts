@@ -107,3 +107,74 @@ export function createMiniResNet(): CNNModel {
     },
   };
 }
+
+/** Simplified AlexNet preset (5 conv layers + 3 FC) */
+export function createAlexNet(): CNNModel {
+  return {
+    type: 'cnn',
+    name: 'AlexNet (Simplified)',
+    description: 'Simplified AlexNet (Krizhevsky 2012) — the architecture that launched the deep learning era',
+    layers: [
+      { id: 'input', type: 'input', width: 227, height: 227, channels: 3, label: 'Input (227x227x3)' },
+      { id: 'conv1', type: 'conv2d', filters: 96, kernelSize: 11, stride: 4, padding: 0, activation: 'relu', width: 55, height: 55, channels: 96, label: 'Conv1 (11x11, 96)' },
+      { id: 'pool1', type: 'maxpool', poolSize: 3, width: 27, height: 27, channels: 96, label: 'MaxPool (3x3, s2)' },
+      { id: 'conv2', type: 'conv2d', filters: 256, kernelSize: 5, stride: 1, padding: 2, activation: 'relu', width: 27, height: 27, channels: 256, label: 'Conv2 (5x5, 256)' },
+      { id: 'pool2', type: 'maxpool', poolSize: 3, width: 13, height: 13, channels: 256, label: 'MaxPool (3x3, s2)' },
+      { id: 'conv3', type: 'conv2d', filters: 384, kernelSize: 3, stride: 1, padding: 1, activation: 'relu', width: 13, height: 13, channels: 384, label: 'Conv3 (3x3, 384)' },
+      { id: 'conv4', type: 'conv2d', filters: 384, kernelSize: 3, stride: 1, padding: 1, activation: 'relu', width: 13, height: 13, channels: 384, label: 'Conv4 (3x3, 384)' },
+      { id: 'conv5', type: 'conv2d', filters: 256, kernelSize: 3, stride: 1, padding: 1, activation: 'relu', width: 13, height: 13, channels: 256, label: 'Conv5 (3x3, 256)' },
+      { id: 'pool3', type: 'maxpool', poolSize: 3, width: 6, height: 6, channels: 256, label: 'MaxPool (3x3, s2)' },
+      { id: 'flatten', type: 'flatten', neurons: 9216, label: 'Flatten (9216)' },
+      { id: 'fc1', type: 'dense', neurons: 512, activation: 'relu', dropout: 0.5, label: 'FC1 (512)' },
+      { id: 'fc2', type: 'dense', neurons: 512, activation: 'relu', dropout: 0.5, label: 'FC2 (512)' },
+      { id: 'output', type: 'output', neurons: 1000, activation: 'softmax', label: 'Output (1000)' },
+    ],
+    metadata: {
+      framework: 'PyTorch',
+      trainedOn: 'ImageNet',
+      accuracy: 0.633,
+      parameters: 62_378_344,
+    },
+  };
+}
+
+/** Simplified VGG-11 preset */
+export function createVGG11(): CNNModel {
+  return {
+    type: 'cnn',
+    name: 'VGG-11 (Simplified)',
+    description: 'Simplified VGG-11 (Simonyan & Zisserman 2014) — uniform 3x3 conv design philosophy',
+    layers: [
+      { id: 'input', type: 'input', width: 224, height: 224, channels: 3, label: 'Input (224x224x3)' },
+      // Block 1
+      { id: 'conv1', type: 'conv2d', filters: 64, kernelSize: 3, stride: 1, padding: 1, activation: 'relu', width: 224, height: 224, channels: 64, label: 'Conv1 (3x3, 64)' },
+      { id: 'pool1', type: 'maxpool', poolSize: 2, width: 112, height: 112, channels: 64, label: 'MaxPool (2x2)' },
+      // Block 2
+      { id: 'conv2', type: 'conv2d', filters: 128, kernelSize: 3, stride: 1, padding: 1, activation: 'relu', width: 112, height: 112, channels: 128, label: 'Conv2 (3x3, 128)' },
+      { id: 'pool2', type: 'maxpool', poolSize: 2, width: 56, height: 56, channels: 128, label: 'MaxPool (2x2)' },
+      // Block 3
+      { id: 'conv3a', type: 'conv2d', filters: 256, kernelSize: 3, stride: 1, padding: 1, activation: 'relu', width: 56, height: 56, channels: 256, label: 'Conv3a (3x3, 256)' },
+      { id: 'conv3b', type: 'conv2d', filters: 256, kernelSize: 3, stride: 1, padding: 1, activation: 'relu', width: 56, height: 56, channels: 256, label: 'Conv3b (3x3, 256)' },
+      { id: 'pool3', type: 'maxpool', poolSize: 2, width: 28, height: 28, channels: 256, label: 'MaxPool (2x2)' },
+      // Block 4
+      { id: 'conv4a', type: 'conv2d', filters: 512, kernelSize: 3, stride: 1, padding: 1, activation: 'relu', width: 28, height: 28, channels: 512, label: 'Conv4a (3x3, 512)' },
+      { id: 'conv4b', type: 'conv2d', filters: 512, kernelSize: 3, stride: 1, padding: 1, activation: 'relu', width: 28, height: 28, channels: 512, label: 'Conv4b (3x3, 512)' },
+      { id: 'pool4', type: 'maxpool', poolSize: 2, width: 14, height: 14, channels: 512, label: 'MaxPool (2x2)' },
+      // Block 5
+      { id: 'conv5a', type: 'conv2d', filters: 512, kernelSize: 3, stride: 1, padding: 1, activation: 'relu', width: 14, height: 14, channels: 512, label: 'Conv5a (3x3, 512)' },
+      { id: 'conv5b', type: 'conv2d', filters: 512, kernelSize: 3, stride: 1, padding: 1, activation: 'relu', width: 14, height: 14, channels: 512, label: 'Conv5b (3x3, 512)' },
+      { id: 'pool5', type: 'maxpool', poolSize: 2, width: 7, height: 7, channels: 512, label: 'MaxPool (2x2)' },
+      // Classifier
+      { id: 'flatten', type: 'flatten', neurons: 512, label: 'Flatten (512)' },
+      { id: 'fc1', type: 'dense', neurons: 256, activation: 'relu', dropout: 0.5, label: 'FC1 (256)' },
+      { id: 'fc2', type: 'dense', neurons: 256, activation: 'relu', dropout: 0.5, label: 'FC2 (256)' },
+      { id: 'output', type: 'output', neurons: 1000, activation: 'softmax', label: 'Output (1000)' },
+    ],
+    metadata: {
+      framework: 'PyTorch',
+      trainedOn: 'ImageNet',
+      accuracy: 0.692,
+      parameters: 132_863_336,
+    },
+  };
+}

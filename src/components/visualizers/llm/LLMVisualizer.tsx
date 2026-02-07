@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Text, Torus, Cylinder, RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
@@ -25,9 +25,13 @@ function AttentionBeam({
   const ref = useRef<THREE.Line>(null!);
   const color = ATTENTION_HEAD_COLORS[headIndex % ATTENTION_HEAD_COLORS.length];
 
+  // Destructure to stable primitives so useMemo doesn't depend on array references
+  const [fx, fy, fz] = from;
+  const [tx, ty, tz] = to;
+
   const lineObj = useMemo(() => {
-    const start = new THREE.Vector3(...from);
-    const end = new THREE.Vector3(...to);
+    const start = new THREE.Vector3(fx, fy, fz);
+    const end = new THREE.Vector3(tx, ty, tz);
     const mid = new THREE.Vector3().lerpVectors(start, end, 0.5);
     mid.y += 0.5 + strength * 1.5;
     const curve = new THREE.QuadraticBezierCurve3(start, mid, end);
@@ -38,7 +42,15 @@ function AttentionBeam({
       opacity: strength * 0.5,
     });
     return new THREE.Line(geometry, material);
-  }, [from, to, strength, color]);
+  }, [fx, fy, fz, tx, ty, tz, strength, color]);
+
+  // Dispose geometry and material on unmount or when lineObj changes
+  useEffect(() => {
+    return () => {
+      lineObj.geometry.dispose();
+      (lineObj.material as THREE.LineBasicMaterial).dispose();
+    };
+  }, [lineObj]);
 
   useFrame(() => {
     if (ref.current) {
@@ -245,37 +257,43 @@ export default function LLMVisualizer({ model }: LLMVisualizerProps) {
   const tokenCount = Math.min(config.maxSeqLen, 8);
   const tokenSpacing = 1.2;
 
-  // Group layers by transformer block
+  const blockSpacing = 5;
+
+  // Group layers by transformer block and pre-compute Y positions
   const blocks = useMemo(() => {
-    const result: { index: number; layers: TransformerLayer[] }[] = [];
+    const result: { index: number; layers: TransformerLayer[]; yPosition: number }[] = [];
     let currentBlock: TransformerLayer[] = [];
     let blockIndex = 0;
 
     for (const layer of model.layers) {
       if (layer.type === 'embedding' || layer.type === 'positional_encoding' || layer.type === 'output') {
-        result.push({ index: blockIndex++, layers: [layer] });
+        result.push({ index: blockIndex++, layers: [layer], yPosition: 0 });
       } else {
         currentBlock.push(layer);
         if (layer.type === 'feed_forward') {
-          result.push({ index: blockIndex++, layers: [...currentBlock] });
+          result.push({ index: blockIndex++, layers: [...currentBlock], yPosition: 0 });
           currentBlock = [];
         }
       }
     }
     if (currentBlock.length > 0) {
-      result.push({ index: blockIndex, layers: currentBlock });
+      result.push({ index: blockIndex, layers: currentBlock, yPosition: 0 });
+    }
+
+    // Compute Y positions: each block is offset by -blockSpacing from the previous
+    let y = 0;
+    for (const block of result) {
+      y -= blockSpacing;
+      block.yPosition = y;
     }
 
     return result;
-  }, [model]);
-
-  let yOffset = 0;
-  const blockSpacing = 5;
+  }, [model, blockSpacing]);
 
   return (
     <group>
       {/* Input tokens */}
-      <group position={[0, yOffset, 0]}>
+      <group position={[0, 0, 0]}>
         {Array.from({ length: tokenCount }).map((_, i) => (
           <TokenBlock
             key={`token-${i}`}
@@ -299,14 +317,13 @@ export default function LLMVisualizer({ model }: LLMVisualizerProps) {
 
       {/* Transformer blocks */}
       {blocks.map((block) => {
-        yOffset -= blockSpacing;
         const hasAttention = block.layers.some((l) => l.type === 'attention');
         const hasFF = block.layers.some((l) => l.type === 'feed_forward');
         const isEmbedding = block.layers.some((l) => l.type === 'embedding');
         const isOutput = block.layers.some((l) => l.type === 'output');
 
         return (
-          <group key={`block-${block.index}`} position={[0, yOffset, 0]}>
+          <group key={`block-${block.index}`} position={[0, block.yPosition, 0]}>
             {/* Block container */}
             {hasAttention && (
               <>

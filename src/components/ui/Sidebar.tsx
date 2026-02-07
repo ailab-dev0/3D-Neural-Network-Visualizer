@@ -15,7 +15,8 @@ const MODEL_TYPE_COLORS: Record<ModelType, string> = {
 };
 
 function ModelsTab() {
-  const { loadPreset, currentPresetId } = useModelStore();
+  const loadPreset = useModelStore((s) => s.loadPreset);
+  const currentPresetId = useModelStore((s) => s.currentPresetId);
   const groups = (['ann', 'cnn', 'llm'] as ModelType[]).map((type) => ({
     type,
     presets: MODEL_PRESETS.filter((p) => p.type === type),
@@ -65,7 +66,8 @@ function ModelsTab() {
 
 function LayersTab() {
   const currentModel = useModelStore((s) => s.currentModel);
-  const { selectedLayerId, selectLayer } = useVisualizationStore();
+  const selectedLayerId = useVisualizationStore((s) => s.selectedLayerId);
+  const selectLayer = useVisualizationStore((s) => s.selectLayer);
 
   if (!currentModel) {
     return (
@@ -119,15 +121,21 @@ function LayersTab() {
 }
 
 function SettingsTab() {
-  const {
-    glowIntensity, setGlowIntensity,
-    neuronSize, setNeuronSize,
-    connectionOpacity, setConnectionOpacity,
-    showWeights, toggleWeights,
-    showActivations, toggleActivations,
-    showLabels, toggleLabels,
-    showDataFlow, toggleDataFlow,
-  } = useVisualizationStore();
+  // Use individual selectors to avoid re-renders on unrelated state changes
+  const glowIntensity = useVisualizationStore((s) => s.glowIntensity);
+  const setGlowIntensity = useVisualizationStore((s) => s.setGlowIntensity);
+  const neuronSize = useVisualizationStore((s) => s.neuronSize);
+  const setNeuronSize = useVisualizationStore((s) => s.setNeuronSize);
+  const connectionOpacity = useVisualizationStore((s) => s.connectionOpacity);
+  const setConnectionOpacity = useVisualizationStore((s) => s.setConnectionOpacity);
+  const showWeights = useVisualizationStore((s) => s.showWeights);
+  const toggleWeights = useVisualizationStore((s) => s.toggleWeights);
+  const showActivations = useVisualizationStore((s) => s.showActivations);
+  const toggleActivations = useVisualizationStore((s) => s.toggleActivations);
+  const showLabels = useVisualizationStore((s) => s.showLabels);
+  const toggleLabels = useVisualizationStore((s) => s.toggleLabels);
+  const showDataFlow = useVisualizationStore((s) => s.showDataFlow);
+  const toggleDataFlow = useVisualizationStore((s) => s.toggleDataFlow);
 
   return (
     <div className="flex flex-col gap-5">
@@ -201,7 +209,10 @@ const TABS: { id: TabId; label: string; icon: string }[] = [
 ];
 
 export default function Sidebar() {
-  const { sidebarOpen, sidebarTab, toggleSidebar, setSidebarTab } = useUIStore();
+  const sidebarOpen = useUIStore((s) => s.sidebarOpen);
+  const sidebarTab = useUIStore((s) => s.sidebarTab);
+  const toggleSidebar = useUIStore((s) => s.toggleSidebar);
+  const setSidebarTab = useUIStore((s) => s.setSidebarTab);
 
   return (
     <div className="fixed top-0 left-0 h-full z-50 flex">

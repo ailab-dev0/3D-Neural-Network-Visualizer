@@ -1,10 +1,18 @@
 import { useVisualizationStore } from '../../stores/visualizationStore';
 
 export default function PlaybackControls() {
-  const {
-    animationState, animationSpeed, showDataFlow, autoRotate,
-    play, pause, stop, step, setAnimationSpeed, toggleDataFlow, setAutoRotate,
-  } = useVisualizationStore();
+  // Use individual selectors to avoid re-renders on unrelated state changes
+  const animationState = useVisualizationStore((s) => s.animationState);
+  const animationSpeed = useVisualizationStore((s) => s.animationSpeed);
+  const showDataFlow = useVisualizationStore((s) => s.showDataFlow);
+  const autoRotate = useVisualizationStore((s) => s.autoRotate);
+  const play = useVisualizationStore((s) => s.play);
+  const pause = useVisualizationStore((s) => s.pause);
+  const stop = useVisualizationStore((s) => s.stop);
+  const step = useVisualizationStore((s) => s.step);
+  const setAnimationSpeed = useVisualizationStore((s) => s.setAnimationSpeed);
+  const toggleDataFlow = useVisualizationStore((s) => s.toggleDataFlow);
+  const setAutoRotate = useVisualizationStore((s) => s.setAutoRotate);
 
   const isPlaying = animationState === 'playing';
 

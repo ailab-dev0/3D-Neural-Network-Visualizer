@@ -188,3 +188,57 @@ export function createNanoTransformer(): LLMModel {
     },
   };
 }
+
+/** Tiny Llama preset — small Llama-style decoder-only model */
+export function createTinyLlama(): LLMModel {
+  const config: TransformerConfig = {
+    vocabSize: 32000,
+    maxSeqLen: 2048,
+    dModel: 512,
+    nHeads: 8,
+    nLayers: 4, // Simplified for visualization (real TinyLlama has 22)
+    dFF: 1376,
+    dropout: 0.0,
+    architecture: 'decoder-only',
+  };
+
+  return {
+    type: 'llm',
+    name: 'Tiny Llama',
+    description: 'Small Llama-style decoder-only model with RoPE and SwiGLU (4 of 22 layers shown)',
+    config,
+    layers: generateTransformerLayers(config),
+    metadata: {
+      framework: 'PyTorch',
+      trainedOn: 'SlimPajama + StarCoder',
+      parameters: 1_100_000_000,
+      tokenizer: 'SentencePiece',
+    },
+  };
+}
+
+/** Mini GPT preset — minimal GPT for teaching transformer concepts */
+export function createMiniGPT(): LLMModel {
+  const config: TransformerConfig = {
+    vocabSize: 512,
+    maxSeqLen: 64,
+    dModel: 96,
+    nHeads: 3,
+    nLayers: 3,
+    dFF: 384,
+    dropout: 0.1,
+    architecture: 'decoder-only',
+  };
+
+  return {
+    type: 'llm',
+    name: 'Mini GPT',
+    description: 'Minimal GPT for teaching — small enough to trace every operation by hand',
+    config,
+    layers: generateTransformerLayers(config),
+    metadata: {
+      parameters: 96 * 512 + 96 * 64 + 3 * (4 * 96 * 96 + 96 * 384 + 384 * 96) + 96 * 512,
+      tokenizer: 'Character-level',
+    },
+  };
+}

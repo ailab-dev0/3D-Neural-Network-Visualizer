@@ -83,3 +83,56 @@ export function createDeepMLP(): ANNModel {
     },
   };
 }
+
+/** Generate an Autoencoder preset with encoder/decoder and bottleneck */
+export function createAutoencoder(): ANNModel {
+  return {
+    type: 'ann',
+    name: 'Autoencoder',
+    description: 'Symmetric encoder-decoder architecture with a compressed bottleneck layer',
+    layers: [
+      { id: 'input', type: 'input', neurons: 64, label: 'Input (64)' },
+      { id: 'enc1', type: 'hidden', neurons: 32, activation: 'relu', label: 'Encoder 1 (32)' },
+      { id: 'enc2', type: 'hidden', neurons: 16, activation: 'relu', label: 'Encoder 2 (16)' },
+      { id: 'bottleneck', type: 'hidden', neurons: 4, activation: 'relu', label: 'Bottleneck (4)' },
+      { id: 'dec1', type: 'hidden', neurons: 16, activation: 'relu', label: 'Decoder 1 (16)' },
+      { id: 'dec2', type: 'hidden', neurons: 32, activation: 'relu', label: 'Decoder 2 (32)' },
+      { id: 'output', type: 'output', neurons: 64, activation: 'sigmoid', label: 'Output (64)' },
+    ],
+    connections: [
+      { fromLayer: 'input', toLayer: 'enc1' },
+      { fromLayer: 'enc1', toLayer: 'enc2' },
+      { fromLayer: 'enc2', toLayer: 'bottleneck' },
+      { fromLayer: 'bottleneck', toLayer: 'dec1' },
+      { fromLayer: 'dec1', toLayer: 'dec2' },
+      { fromLayer: 'dec2', toLayer: 'output' },
+    ],
+    metadata: {
+      parameters: 64 * 32 + 32 + 32 * 16 + 16 + 16 * 4 + 4 + 4 * 16 + 16 + 16 * 32 + 32 + 32 * 64 + 64,
+      trainedOn: 'MNIST (unsupervised)',
+    },
+  };
+}
+
+/** Generate a minimal XOR network preset for teaching */
+export function createXOR(): ANNModel {
+  return {
+    type: 'ann',
+    name: 'XOR Network',
+    description: 'Minimal 2-2-1 network that solves the classic XOR problem',
+    layers: [
+      { id: 'input', type: 'input', neurons: 2, label: 'Input (2)' },
+      { id: 'hidden1', type: 'hidden', neurons: 2, activation: 'tanh', label: 'Hidden (2)' },
+      { id: 'output', type: 'output', neurons: 1, activation: 'sigmoid', label: 'Output (1)' },
+    ],
+    connections: [
+      { fromLayer: 'input', toLayer: 'hidden1' },
+      { fromLayer: 'hidden1', toLayer: 'output' },
+    ],
+    metadata: {
+      parameters: 2 * 2 + 2 + 2 * 1 + 1,
+      trainedOn: 'XOR truth table',
+      accuracy: 1.0,
+    },
+  };
+}

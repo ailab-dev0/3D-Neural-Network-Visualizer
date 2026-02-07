@@ -22,13 +22,17 @@ export default function DataFlowParticle({
 }: DataFlowParticleProps) {
   const meshRef = useRef<THREE.Mesh>(null);
 
+  // Destructure to stable primitives so useMemo doesn't depend on array references
+  const [sx, sy, sz] = start;
+  const [ex, ey, ez] = end;
+
   const curve = useMemo(() => {
-    const startV = new THREE.Vector3(...start);
-    const endV = new THREE.Vector3(...end);
+    const startV = new THREE.Vector3(sx, sy, sz);
+    const endV = new THREE.Vector3(ex, ey, ez);
     const mid = new THREE.Vector3().lerpVectors(startV, endV, 0.5);
     mid.y += startV.distanceTo(endV) * 0.08;
     return new THREE.QuadraticBezierCurve3(startV, mid, endV);
-  }, [start, end]);
+  }, [sx, sy, sz, ex, ey, ez]);
 
   useFrame(() => {
     if (!meshRef.current) return;
