@@ -260,6 +260,11 @@ export default function NarrationPanel() {
     if (state.simulationRunning) return;
     if (!state.voiceEnabled) return;
 
+    // Only speak model info and layer details via voice.
+    // Tips and action narrations (play/pause/toggle) are too brief
+    // and would interrupt meaningful speech.
+    if (currentIcon === 'tip' || currentIcon === 'action') return;
+
     voiceNarrator.cancel();
     voiceNarrator.speak(currentNarration);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -382,18 +387,23 @@ export default function NarrationPanel() {
   }, [autoRotate, narrationEnabled, setNarration]);
 
   // ---- TRIGGER: Idle tips ----
+  // Tips only show when idle: not during simulation, not while voice is speaking,
+  // and not while typewriter is still rendering. Tips are NEVER spoken by voice.
   useEffect(() => {
     if (!narrationEnabled || !currentModel) return;
 
     function scheduleTip() {
       tipTimerRef.current = setTimeout(() => {
         const { simulationRunning: simRunning, isTyping: typing } = useNarrationStore.getState();
-        if (!simRunning && !typing) {
+        // Don't show tips while voice is actively speaking — it would
+        // cause jarring interruptions to the current narration text
+        const speaking = voiceNarrator.isSpeaking();
+        if (!simRunning && !typing && !speaking) {
           const randomTip = tipNarrations[Math.floor(Math.random() * tipNarrations.length)];
           setNarration(randomTip, 'tip');
         }
         scheduleTip();
-      }, 20000); // Show a tip every 20 seconds of idle
+      }, 30000); // Show a tip every 30 seconds of idle (increased from 20s)
     }
 
     scheduleTip();
