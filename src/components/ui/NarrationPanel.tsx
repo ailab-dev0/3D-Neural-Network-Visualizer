@@ -3,6 +3,7 @@ import { useNarrationStore, type NarrationEntry } from '../../stores/narrationSt
 import { useModelStore } from '../../stores/modelStore';
 import { useVisualizationStore } from '../../stores/visualizationStore';
 import { useUIStore } from '../../stores/uiStore';
+import { voiceNarrator } from '../../utils/speech';
 import {
   modelNarrations,
   layerNarrations,
@@ -67,6 +68,29 @@ function SimulationIcon() {
   );
 }
 
+/* ============================================
+   Speaker Icons for voice controls
+   ============================================ */
+function SpeakerOnIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+    </svg>
+  );
+}
+
+function SpeakerOffIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+      <line x1="23" y1="9" x2="17" y2="15" />
+      <line x1="17" y1="9" x2="23" y2="15" />
+    </svg>
+  );
+}
+
 const ICON_MAP: Record<NarrationEntry['icon'], React.ComponentType> = {
   model: BrainIcon,
   layer: LayerIcon,
@@ -82,6 +106,19 @@ const ICON_COLOR_MAP: Record<NarrationEntry['icon'], string> = {
   tip: 'var(--accent-green)',
   simulation: 'var(--accent-cyan)',
 };
+
+/* ============================================
+   Audio Waveform Animation Component
+   ============================================ */
+function AudioWaveform() {
+  return (
+    <div className="voice-waveform" title="Voice is speaking">
+      <span className="voice-waveform-bar voice-waveform-bar-1" />
+      <span className="voice-waveform-bar voice-waveform-bar-2" />
+      <span className="voice-waveform-bar voice-waveform-bar-3" />
+    </div>
+  );
+}
 
 /* ============================================
    Typewriter Hook
@@ -149,6 +186,10 @@ export default function NarrationPanel() {
   const stopSimulation = useNarrationStore((s) => s.stopSimulation);
   const advanceSimulation = useNarrationStore((s) => s.advanceSimulation);
   const toggleNarration = useNarrationStore((s) => s.toggleNarration);
+  const voiceEnabled = useNarrationStore((s) => s.voiceEnabled);
+  const voiceRate = useNarrationStore((s) => s.voiceRate);
+  const voiceVolume = useNarrationStore((s) => s.voiceVolume);
+  const toggleVoice = useNarrationStore((s) => s.toggleVoice);
 
   const currentModel = useModelStore((s) => s.currentModel);
   const currentPresetId = useModelStore((s) => s.currentPresetId);
@@ -161,11 +202,14 @@ export default function NarrationPanel() {
   const lightConeEnabled = useVisualizationStore((s) => s.lightConeEnabled);
   const autoRotate = useVisualizationStore((s) => s.autoRotate);
   const selectLayer = useVisualizationStore((s) => s.selectLayer);
+  const play = useVisualizationStore((s) => s.play);
+  const toggleDataFlowFn = useVisualizationStore((s) => s.toggleDataFlow);
 
   const sidebarOpen = useUIStore((s) => s.sidebarOpen);
 
   const { displayed, done } = useTypewriter(currentNarration, 25);
   const [showHistory, setShowHistory] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const simulationStepsRef = useRef<SimulationStep[]>([]);
   const simulationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -177,6 +221,48 @@ export default function NarrationPanel() {
   const prevLightConeRef = useRef(lightConeEnabled);
   const prevAutoRotateRef = useRef(autoRotate);
   const prevAnimStateRef = useRef(animationState);
+  const speakingPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Sync voiceNarrator settings with store
+  useEffect(() => {
+    voiceNarrator.setEnabled(voiceEnabled);
+  }, [voiceEnabled]);
+
+  useEffect(() => {
+    voiceNarrator.setRate(voiceRate);
+  }, [voiceRate]);
+
+  useEffect(() => {
+    voiceNarrator.setVolume(voiceVolume);
+  }, [voiceVolume]);
+
+  // Poll speaking state for UI indicator
+  useEffect(() => {
+    speakingPollRef.current = setInterval(() => {
+      setIsSpeaking(voiceNarrator.isSpeaking());
+    }, 200);
+    return () => {
+      if (speakingPollRef.current) clearInterval(speakingPollRef.current);
+    };
+  }, []);
+
+  // Speak narrations when they change (non-simulation narrations)
+  useEffect(() => {
+    if (!narrationEnabled || !currentNarration || !voiceEnabled) return;
+    // Only auto-speak non-simulation narrations here.
+    // Simulation narrations are handled by the simulation flow.
+    const state = useNarrationStore.getState();
+    if (state.simulationRunning) return;
+
+    voiceNarrator.speak(currentNarration);
+  }, [currentNarration, narrationEnabled, voiceEnabled]);
+
+  // Stop voice when narration is disabled or voice is toggled off
+  useEffect(() => {
+    if (!narrationEnabled || !voiceEnabled) {
+      voiceNarrator.stop();
+    }
+  }, [narrationEnabled, voiceEnabled]);
 
   // Update typing state
   useEffect(() => {
@@ -308,7 +394,7 @@ export default function NarrationPanel() {
     };
   }, [narrationEnabled, currentModel, setNarration]);
 
-  // ---- SIMULATION: Generate steps and run ----
+  // ---- SIMULATION: Generate steps and run with voice sync ----
   const runSimulation = useCallback(() => {
     if (!currentModel) return;
 
@@ -334,13 +420,27 @@ export default function NarrationPanel() {
     simulationStepsRef.current = steps;
     startSimulation(steps.length);
 
-    // Show first step
+    // Start visualization: play animation and enable data flow
+    const vizState = useVisualizationStore.getState();
+    if (vizState.animationState !== 'playing') {
+      play();
+    }
+    if (!vizState.showDataFlow) {
+      toggleDataFlowFn();
+    }
+
+    // Show first step and speak it
     const firstStep = steps[0];
     setNarration(firstStep.text, 'simulation');
     selectLayer(currentModel.layers[firstStep.layerIndex]?.id ?? null);
-  }, [currentModel, startSimulation, setNarration, selectLayer]);
 
-  // Advance simulation when step changes
+    // Speak the first step with voice
+    if (voiceEnabled) {
+      voiceNarrator.speak(firstStep.text);
+    }
+  }, [currentModel, startSimulation, setNarration, selectLayer, play, toggleDataFlowFn, voiceEnabled]);
+
+  // Advance simulation when step changes — voice-synchronized
   useEffect(() => {
     if (!simulationRunning) return;
 
@@ -348,36 +448,102 @@ export default function NarrationPanel() {
     const currentStep = steps[simulationStep];
     if (!currentStep) return;
 
-    simulationTimerRef.current = setTimeout(() => {
-      if (simulationStep < steps.length - 1) {
+    // Determine wait time: use step duration, but if voice is enabled,
+    // use a minimum that allows speech to complete (with a timeout cap)
+    const baseDuration = currentStep.duration;
+    const voiceActive = useNarrationStore.getState().voiceEnabled;
+
+    // If voice is active, wait for speech to end OR timeout (whichever first)
+    // The timeout prevents getting stuck if speech API has issues
+    const maxWait = voiceActive ? Math.max(baseDuration, 8000) : baseDuration;
+
+    let resolved = false;
+    let pollInterval: ReturnType<typeof setInterval> | null = null;
+
+    function advance() {
+      if (resolved) return;
+      resolved = true;
+
+      if (pollInterval) clearInterval(pollInterval);
+      if (simulationTimerRef.current) clearTimeout(simulationTimerRef.current);
+
+      const stepsLocal = simulationStepsRef.current;
+      const stepLocal = simulationStep;
+
+      if (stepLocal < stepsLocal.length - 1) {
         advanceSimulation();
-        const nextStep = steps[simulationStep + 1];
+        const nextStep = stepsLocal[stepLocal + 1];
         if (nextStep && currentModel) {
           setNarration(nextStep.text, 'simulation');
           selectLayer(currentModel.layers[nextStep.layerIndex]?.id ?? null);
+
+          // Speak the next step
+          if (useNarrationStore.getState().voiceEnabled) {
+            voiceNarrator.speak(nextStep.text);
+          }
         }
       } else {
+        // Last step finished
+        if (useNarrationStore.getState().voiceEnabled) {
+          voiceNarrator.speak('Simulation complete.');
+        }
         stopSimulation();
       }
-    }, currentStep.duration);
+    }
 
-    return () => {
-      if (simulationTimerRef.current) clearTimeout(simulationTimerRef.current);
-    };
+    if (voiceActive) {
+      // Wait for speech to finish, with a maximum timeout
+      pollInterval = setInterval(() => {
+        if (!voiceNarrator.isSpeaking()) {
+          if (pollInterval) clearInterval(pollInterval);
+          // Small pause between steps for natural pacing
+          simulationTimerRef.current = setTimeout(advance, 400);
+        }
+      }, 150);
+
+      // Safety timeout
+      simulationTimerRef.current = setTimeout(() => {
+        if (pollInterval) clearInterval(pollInterval);
+        advance();
+      }, maxWait);
+
+      return () => {
+        if (pollInterval) clearInterval(pollInterval);
+        if (simulationTimerRef.current) clearTimeout(simulationTimerRef.current);
+      };
+    } else {
+      // No voice: use original duration-based timing
+      simulationTimerRef.current = setTimeout(advance, baseDuration);
+
+      return () => {
+        if (simulationTimerRef.current) clearTimeout(simulationTimerRef.current);
+      };
+    }
   }, [simulationRunning, simulationStep, currentModel, advanceSimulation, stopSimulation, setNarration, selectLayer, simulationTotalSteps]);
+
+  // Stop voice when simulation stops
+  const handleStopSimulation = useCallback(() => {
+    voiceNarrator.stop();
+    stopSimulation();
+  }, [stopSimulation]);
+
+  // Handle voice toggle from panel button
+  const handleToggleVoice = useCallback(() => {
+    toggleVoice();
+  }, [toggleVoice]);
 
   // Don't render if narration is disabled
   if (!narrationEnabled) {
     return (
       <button
         onClick={toggleNarration}
-        className="fixed bottom-24 z-50 w-10 h-10 flex items-center justify-center rounded-xl cursor-pointer narration-toggle-btn"
+        className="fixed bottom-20 z-40 w-10 h-10 flex items-center justify-center rounded-xl cursor-pointer narration-toggle-btn"
         style={{
-          left: sidebarOpen ? '310px' : '16px',
+          left: sidebarOpen ? '296px' : '16px',
           background: 'linear-gradient(135deg, rgba(0, 229, 255, 0.12), rgba(0, 229, 255, 0.06))',
           border: '1px solid rgba(0, 229, 255, 0.25)',
           color: 'var(--accent-cyan)',
-          transition: 'left 400ms cubic-bezier(0.16, 1, 0.3, 1), all 250ms cubic-bezier(0.4, 0, 0.2, 1)',
+          transition: 'left 300ms ease, all 250ms cubic-bezier(0.4, 0, 0.2, 1)',
         }}
         title="Enable Narration (N)"
       >
@@ -398,13 +564,15 @@ export default function NarrationPanel() {
 
   return (
     <div
-      className="fixed bottom-24 z-50 narration-panel-enter"
+      className="fixed bottom-20 z-40 narration-panel-enter"
       style={{
-        left: sidebarOpen ? '310px' : '16px',
-        maxWidth: '420px',
+        left: sidebarOpen ? '296px' : '16px',
+        maxWidth: '380px',
         width: 'calc(100vw - 340px)',
-        minWidth: '300px',
-        transition: 'left 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+        minWidth: '280px',
+        maxHeight: 'calc(100vh - 120px)',
+        overflowY: 'auto',
+        transition: 'left 300ms ease',
       }}
     >
       {/* History (collapsible) */}
@@ -474,9 +642,26 @@ export default function NarrationPanel() {
                 Step {simulationStep + 1}/{simulationTotalSteps}
               </span>
             )}
+            {/* Audio waveform indicator when speaking */}
+            {isSpeaking && voiceEnabled && <AudioWaveform />}
           </div>
 
           <div className="flex items-center gap-1.5">
+            {/* Voice toggle button */}
+            <button
+              onClick={handleToggleVoice}
+              className={`w-6 h-6 flex items-center justify-center rounded-lg cursor-pointer ${isSpeaking && voiceEnabled ? 'voice-speaker-pulse' : ''}`}
+              style={{
+                background: voiceEnabled ? 'rgba(0, 229, 255, 0.12)' : 'transparent',
+                color: voiceEnabled ? 'var(--accent-cyan)' : 'var(--text-muted)',
+                border: voiceEnabled ? '1px solid rgba(0, 229, 255, 0.3)' : '1px solid var(--border)',
+                transition: 'all 250ms cubic-bezier(0.4, 0, 0.2, 1)',
+              }}
+              title={voiceEnabled ? 'Mute voice (V)' : 'Enable voice (V)'}
+            >
+              {voiceEnabled ? <SpeakerOnIcon /> : <SpeakerOffIcon />}
+            </button>
+
             {/* History toggle */}
             {narrationHistory.length > 1 && (
               <button
@@ -516,7 +701,7 @@ export default function NarrationPanel() {
 
             {simulationRunning && (
               <button
-                onClick={stopSimulation}
+                onClick={handleStopSimulation}
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-medium cursor-pointer"
                 style={{
                   background: 'linear-gradient(135deg, rgba(255, 82, 82, 0.12), rgba(255, 82, 82, 0.06))',
@@ -552,8 +737,8 @@ export default function NarrationPanel() {
 
         {/* Narration text with typewriter effect */}
         <div
-          className="text-[13px] leading-relaxed min-h-[40px]"
-          style={{ color: 'var(--text-secondary)' }}
+          className="text-[12px] leading-relaxed min-h-[36px]"
+          style={{ color: 'var(--text-secondary)', overflowWrap: 'break-word', wordBreak: 'break-word' }}
         >
           {displayed || (
             <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>
@@ -583,6 +768,9 @@ export default function NarrationPanel() {
           <span className="text-[9px]" style={{ color: 'var(--text-muted)' }}>Press</span>
           <kbd className="kbd-key" style={{ fontSize: '8px', padding: '0px 4px', minWidth: '14px', borderBottomWidth: '1.5px' }}>N</kbd>
           <span className="text-[9px]" style={{ color: 'var(--text-muted)' }}>to toggle</span>
+          <span className="text-[9px] ml-1" style={{ color: 'var(--text-muted)' }}>|</span>
+          <kbd className="kbd-key" style={{ fontSize: '8px', padding: '0px 4px', minWidth: '14px', borderBottomWidth: '1.5px' }}>V</kbd>
+          <span className="text-[9px]" style={{ color: 'var(--text-muted)' }}>voice</span>
         </div>
       </div>
     </div>

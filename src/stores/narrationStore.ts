@@ -24,6 +24,13 @@ interface NarrationState {
   /** Total simulation steps */
   simulationTotalSteps: number;
 
+  /** Whether voice narration is enabled */
+  voiceEnabled: boolean;
+  /** Voice speech rate (0.5 to 2.0) */
+  voiceRate: number;
+  /** Voice volume (0 to 1) */
+  voiceVolume: number;
+
   // Actions
   setNarration: (text: string, icon?: NarrationEntry['icon']) => void;
   clearNarration: () => void;
@@ -32,6 +39,9 @@ interface NarrationState {
   startSimulation: (totalSteps: number) => void;
   stopSimulation: () => void;
   advanceSimulation: () => void;
+  toggleVoice: () => void;
+  setVoiceRate: (rate: number) => void;
+  setVoiceVolume: (volume: number) => void;
 }
 
 export const useNarrationStore = create<NarrationState>((set) => ({
@@ -43,6 +53,9 @@ export const useNarrationStore = create<NarrationState>((set) => ({
   simulationRunning: false,
   simulationStep: 0,
   simulationTotalSteps: 0,
+  voiceEnabled: true,
+  voiceRate: 0.9,
+  voiceVolume: 0.8,
 
   setNarration: (text, icon = 'tip') =>
     set((state) => {
@@ -83,4 +96,13 @@ export const useNarrationStore = create<NarrationState>((set) => ({
       }
       return { simulationStep: next };
     }),
+
+  toggleVoice: () =>
+    set((state) => ({ voiceEnabled: !state.voiceEnabled })),
+
+  setVoiceRate: (rate) =>
+    set({ voiceRate: Math.max(0.5, Math.min(2, rate)) }),
+
+  setVoiceVolume: (volume) =>
+    set({ voiceVolume: Math.max(0, Math.min(1, volume)) }),
 }));

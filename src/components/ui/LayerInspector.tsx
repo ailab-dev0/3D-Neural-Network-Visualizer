@@ -154,8 +154,11 @@ export default function LayerInspector() {
   const paramCount = calculateParamCount(currentModel, selectedLayerId);
   const badgeColor = TYPE_BADGE_COLORS[layer.type] ?? 'var(--text-muted)';
 
+  // Offset below ModelInfo when a model is loaded (ModelInfo is ~100px tall at top-4)
+  const topOffset = currentModel ? 'calc(1rem + 110px)' : '1rem';
+
   return (
-    <div className="fixed top-4 right-4 z-50 w-72 slide-in-right">
+    <div className="fixed right-4 z-30 w-72 slide-in-right" style={{ top: topOffset }}>
       <div className="glass-panel rounded-xl overflow-hidden">
         {/* Top accent line */}
         <div

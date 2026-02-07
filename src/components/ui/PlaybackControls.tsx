@@ -1,5 +1,6 @@
 import { useVisualizationStore } from '../../stores/visualizationStore';
 import { useModelStore } from '../../stores/modelStore';
+import { useUIStore } from '../../stores/uiStore';
 
 export default function PlaybackControls() {
   const currentModel = useModelStore((s) => s.currentModel);
@@ -17,25 +18,37 @@ export default function PlaybackControls() {
   const lightConeEnabled = useVisualizationStore((s) => s.lightConeEnabled);
   const toggleLightCone = useVisualizationStore((s) => s.toggleLightCone);
 
+  const sidebarOpen = useUIStore((s) => s.sidebarOpen);
+
   const isPlaying = animationState === 'playing';
   const speedPct = ((animationSpeed - 0.1) / 2.9) * 100;
 
   if (!currentModel) return null;
 
+  // Center within the visible canvas area (offset by sidebar width when open)
+  const sidebarWidth = sidebarOpen ? 290 : 0;
+
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+    <div
+      className="fixed bottom-4 z-40"
+      style={{
+        left: `calc(${sidebarWidth}px + (100vw - ${sidebarWidth}px) / 2)`,
+        transform: 'translateX(-50%)',
+        transition: 'left 300ms ease',
+      }}
+    >
       <div
-        className="glass-panel-strong rounded-2xl px-7 py-4 flex items-center gap-6"
+        className="glass-panel-strong rounded-2xl px-5 py-3 flex items-center gap-4"
         style={{
           boxShadow: '0 8px 40px rgba(0, 0, 0, 0.5), 0 0 1px rgba(255, 255, 255, 0.1)',
         }}
       >
         {/* Transport controls */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {/* Stop */}
           <button
             onClick={stop}
-            className="transport-btn w-10 h-10 flex items-center justify-center rounded-xl cursor-pointer"
+            className="transport-btn w-9 h-9 flex items-center justify-center rounded-xl cursor-pointer"
             style={{
               background: animationState === 'idle'
                 ? 'rgba(255, 255, 255, 0.04)'
@@ -53,7 +66,7 @@ export default function PlaybackControls() {
           {/* Play / Pause */}
           <button
             onClick={isPlaying ? pause : play}
-            className={`transport-btn w-12 h-12 flex items-center justify-center rounded-2xl cursor-pointer ${isPlaying ? 'play-pulse' : 'play-btn-idle'}`}
+            className={`transport-btn w-10 h-10 flex items-center justify-center rounded-2xl cursor-pointer ${isPlaying ? 'play-pulse' : 'play-btn-idle'}`}
             style={{
               background: isPlaying
                 ? 'linear-gradient(135deg, rgba(79, 195, 247, 0.2), rgba(79, 195, 247, 0.1))'
@@ -78,7 +91,7 @@ export default function PlaybackControls() {
           {/* Step Forward */}
           <button
             onClick={step}
-            className="transport-btn w-10 h-10 flex items-center justify-center rounded-xl cursor-pointer"
+            className="transport-btn w-9 h-9 flex items-center justify-center rounded-xl cursor-pointer"
             style={{
               background: 'rgba(255, 255, 255, 0.04)',
               color: 'var(--text-secondary)',
@@ -102,16 +115,16 @@ export default function PlaybackControls() {
         />
 
         {/* Speed slider */}
-        <div className="flex flex-col items-center gap-1.5">
+        <div className="flex flex-col items-center gap-1">
           <span
             className="text-[9px] font-semibold uppercase tracking-[0.15em]"
             style={{ color: 'var(--text-muted)' }}
           >
             Speed
           </span>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             <span
-              className="text-[11px] font-mono w-9 text-right px-1 py-0.5 rounded"
+              className="text-[10px] font-mono w-8 text-right px-1 py-0.5 rounded"
               style={{
                 color: 'var(--accent-blue)',
                 background: 'rgba(79, 195, 247, 0.06)',
@@ -123,7 +136,7 @@ export default function PlaybackControls() {
               type="range" min={0.1} max={3} step={0.1}
               value={animationSpeed}
               onChange={(e) => setAnimationSpeed(parseFloat(e.target.value))}
-              className="w-28 h-1 rounded-full appearance-none cursor-pointer"
+              className="w-24 h-1 rounded-full appearance-none cursor-pointer"
               style={{
                 background: `linear-gradient(to right, var(--accent-blue) ${speedPct}%, rgba(255,255,255,0.06) ${speedPct}%)`,
               }}
@@ -140,11 +153,11 @@ export default function PlaybackControls() {
         />
 
         {/* Toggles */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-1.5">
           {/* Data Flow toggle */}
           <button
             onClick={toggleDataFlow}
-            className="transport-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-[11px] font-medium cursor-pointer"
+            className="transport-btn flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium cursor-pointer"
             style={{
               background: showDataFlow
                 ? 'linear-gradient(135deg, rgba(105, 240, 174, 0.12), rgba(105, 240, 174, 0.06))'
@@ -168,7 +181,7 @@ export default function PlaybackControls() {
           {/* Auto Rotate toggle */}
           <button
             onClick={() => setAutoRotate(!autoRotate)}
-            className="transport-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-[11px] font-medium cursor-pointer"
+            className="transport-btn flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium cursor-pointer"
             style={{
               background: autoRotate
                 ? 'linear-gradient(135deg, rgba(179, 136, 255, 0.12), rgba(179, 136, 255, 0.06))'
@@ -191,7 +204,7 @@ export default function PlaybackControls() {
           {/* Light Cone toggle */}
           <button
             onClick={toggleLightCone}
-            className="transport-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-[11px] font-medium cursor-pointer"
+            className="transport-btn flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium cursor-pointer"
             style={{
               background: lightConeEnabled
                 ? 'linear-gradient(135deg, rgba(0, 229, 255, 0.12), rgba(0, 229, 255, 0.06))'

@@ -2,6 +2,7 @@ import { useRef, useLayoutEffect } from 'react';
 import { useModelStore, MODEL_PRESETS, type ModelType } from '../../stores/modelStore';
 import { useVisualizationStore, type LightConeMode } from '../../stores/visualizationStore';
 import { useUIStore } from '../../stores/uiStore';
+import { useNarrationStore } from '../../stores/narrationStore';
 
 /* ============================================
    SVG Icons — Inline, no external deps
@@ -283,6 +284,13 @@ function SettingsTab() {
   const lightConeDepth = useVisualizationStore((s) => s.lightConeDepth);
   const setLightConeDepth = useVisualizationStore((s) => s.setLightConeDepth);
 
+  const voiceEnabled = useNarrationStore((s) => s.voiceEnabled);
+  const toggleVoice = useNarrationStore((s) => s.toggleVoice);
+  const voiceRate = useNarrationStore((s) => s.voiceRate);
+  const setVoiceRate = useNarrationStore((s) => s.setVoiceRate);
+  const voiceVolume = useNarrationStore((s) => s.voiceVolume);
+  const setVoiceVolume = useNarrationStore((s) => s.setVoiceVolume);
+
   const CONE_MODES: { value: LightConeMode; label: string }[] = [
     { value: 'forward', label: 'Forward' },
     { value: 'backward', label: 'Backward' },
@@ -390,6 +398,54 @@ function SettingsTab() {
           )}
         </div>
       </div>
+
+      {/* Divider */}
+      <div className="h-px" style={{ background: 'var(--border)' }} />
+
+      {/* Voice Narration section */}
+      <div>
+        <h4
+          className="text-[10px] font-semibold uppercase tracking-[0.12em] mb-4 flex items-center gap-2"
+          style={{ color: voiceEnabled ? 'var(--accent-cyan)' : 'var(--text-muted)' }}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+          </svg>
+          Voice Narration
+        </h4>
+
+        <div className="flex flex-col gap-4">
+          <ToggleSetting label="Enable Voice" checked={voiceEnabled} onChange={toggleVoice} />
+
+          {voiceEnabled && (
+            <>
+              <SliderSetting
+                label="Voice Speed"
+                value={voiceRate}
+                min={0.5}
+                max={2.0}
+                step={0.1}
+                onChange={setVoiceRate}
+              />
+
+              <SliderSetting
+                label="Voice Volume"
+                value={voiceVolume}
+                min={0}
+                max={1}
+                step={0.05}
+                onChange={setVoiceVolume}
+              />
+
+              <p className="text-[10px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                Voice narration uses the Web Speech API built into your browser. Press <kbd className="kbd-key" style={{ fontSize: '9px', padding: '1px 5px', minWidth: '18px', borderBottomWidth: '2px' }}>V</kbd> to toggle.
+              </p>
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -492,7 +548,7 @@ export default function Sidebar() {
   }, [sidebarTab]);
 
   return (
-    <div className="fixed top-0 left-0 h-full z-50 flex">
+    <div className="fixed top-0 left-0 h-full z-40 flex">
       {/* Sidebar panel */}
       <div
         className="sidebar-container h-full flex flex-col overflow-hidden"

@@ -120,7 +120,7 @@ function useKeyboardShortcuts() {
     useVisualizationStore();
   const { setSidebarTab } = useUIStore();
   const { setModelType } = useModelStore();
-  const { toggleNarration } = useNarrationStore();
+  const { toggleNarration, toggleVoice } = useNarrationStore();
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -160,6 +160,10 @@ function useKeyboardShortcuts() {
         case 'N':
           toggleNarration();
           break;
+        case 'v':
+        case 'V':
+          toggleVoice();
+          break;
         case '1':
           setModelType('ann');
           setSidebarTab('models');
@@ -177,24 +181,27 @@ function useKeyboardShortcuts() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [animationState, autoRotate, play, pause, toggleLabels, toggleWeights, toggleDataFlow, toggleLightCone, setAutoRotate, setSidebarTab, setModelType, toggleNarration]);
+  }, [animationState, autoRotate, play, pause, toggleLabels, toggleWeights, toggleDataFlow, toggleLightCone, setAutoRotate, setSidebarTab, setModelType, toggleNarration, toggleVoice]);
 }
 
 export default function App() {
   useKeyboardShortcuts();
+  const sidebarOpen = useUIStore((s) => s.sidebarOpen);
 
   return (
     <div className="relative w-full h-full overflow-hidden">
       {/* Header */}
       <header
-        className="absolute top-0 left-0 right-0 z-40 pointer-events-none"
+        className="absolute top-0 right-0 z-50 pointer-events-none"
         style={{
-          background: 'linear-gradient(to bottom, rgba(8, 8, 13, 0.9) 0%, rgba(8, 8, 13, 0.4) 60%, transparent 100%)',
+          left: sidebarOpen ? '290px' : '0px',
+          background: 'linear-gradient(to bottom, rgba(10, 10, 15, 0.5) 0%, rgba(10, 10, 15, 0.2) 60%, transparent 100%)',
+          transition: 'left 300ms ease',
         }}
       >
-        <div className="relative flex items-center justify-center py-4 px-4">
+        <div className="relative flex items-center justify-center py-3 px-4">
           <div className="text-center">
-            <h1 className="title-shimmer text-base font-semibold tracking-wide">
+            <h1 className="title-shimmer text-sm font-semibold tracking-wide">
               Neural Network Visualizer
             </h1>
             <p

@@ -20,9 +20,9 @@
   --accent-cyan: #00e5ff;
 
   /* Text */
-  --text-primary: #eaeaef;
-  --text-secondary: #a0a0b0;
-  --text-muted: #5a5a70;
+  --text-primary: #eff0f5;
+  --text-secondary: #b0b0c0;
+  --text-muted: #6a6a82;
 
   /* Borders */
   --border: rgba(255, 255, 255, 0.06);
@@ -118,31 +118,31 @@ input:focus-visible {
 .glass-panel {
   background: linear-gradient(
     135deg,
-    rgba(20, 20, 42, 0.85) 0%,
-    rgba(14, 14, 22, 0.9) 100%
+    rgba(20, 20, 42, 0.9) 0%,
+    rgba(14, 14, 22, 0.95) 100%
   );
-  backdrop-filter: blur(24px) saturate(1.2);
-  -webkit-backdrop-filter: blur(24px) saturate(1.2);
-  border: 1px solid var(--border);
+  backdrop-filter: blur(32px) saturate(1.3);
+  -webkit-backdrop-filter: blur(32px) saturate(1.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow:
     var(--shadow-lg),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03);
 }
 
 .glass-panel-strong {
   background: linear-gradient(
     135deg,
-    rgba(20, 20, 42, 0.92) 0%,
-    rgba(14, 14, 22, 0.95) 100%
+    rgba(20, 20, 42, 0.95) 0%,
+    rgba(14, 14, 22, 0.97) 100%
   );
-  backdrop-filter: blur(40px) saturate(1.4);
-  -webkit-backdrop-filter: blur(40px) saturate(1.4);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(48px) saturate(1.5);
+  -webkit-backdrop-filter: blur(48px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow:
     var(--shadow-xl),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
 /* ============================================
@@ -443,7 +443,7 @@ input[type="range"]::-moz-range-track {
    SIDEBAR — Smooth transitions
    ============================================ */
 .sidebar-container {
-  transition: transform 300ms ease;
+  transition: transform 300ms ease, width 300ms ease;
 }
 
 /* ============================================
@@ -574,4 +574,72 @@ input[type="range"]::-moz-range-track {
 .narration-toggle-btn:hover {
   box-shadow: 0 0 16px rgba(0, 229, 255, 0.2);
   background: linear-gradient(135deg, rgba(0, 229, 255, 0.18), rgba(0, 229, 255, 0.1)) !important;
+}
+
+/* ============================================
+   VOICE NARRATION — Speaker & Waveform animations
+   ============================================ */
+
+/* Speaker icon pulsing when voice is active */
+@keyframes voice-speaker-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(0, 229, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(0, 229, 255, 0), 0 0 12px rgba(0, 229, 255, 0.2);
+  }
+}
+
+.voice-speaker-pulse {
+  animation: voice-speaker-pulse 1.5s ease-in-out infinite;
+}
+
+/* Audio waveform / equalizer container */
+.voice-waveform {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+  margin-left: 4px;
+}
+
+/* Individual waveform bars */
+.voice-waveform-bar {
+  display: inline-block;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--accent-cyan);
+}
+
+@keyframes voice-bar-bounce-1 {
+  0%, 100% { height: 3px; opacity: 0.5; }
+  25% { height: 10px; opacity: 1; }
+  50% { height: 5px; opacity: 0.7; }
+  75% { height: 8px; opacity: 0.9; }
+}
+
+@keyframes voice-bar-bounce-2 {
+  0%, 100% { height: 6px; opacity: 0.7; }
+  30% { height: 12px; opacity: 1; }
+  60% { height: 4px; opacity: 0.6; }
+  80% { height: 9px; opacity: 0.9; }
+}
+
+@keyframes voice-bar-bounce-3 {
+  0%, 100% { height: 4px; opacity: 0.6; }
+  20% { height: 7px; opacity: 0.8; }
+  45% { height: 11px; opacity: 1; }
+  70% { height: 3px; opacity: 0.5; }
+}
+
+.voice-waveform-bar-1 {
+  animation: voice-bar-bounce-1 0.8s ease-in-out infinite;
+}
+
+.voice-waveform-bar-2 {
+  animation: voice-bar-bounce-2 0.7s ease-in-out infinite;
+}
+
+.voice-waveform-bar-3 {
+  animation: voice-bar-bounce-3 0.9s ease-in-out infinite;
 }
