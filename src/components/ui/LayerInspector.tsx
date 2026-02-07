@@ -71,7 +71,7 @@ function calculateParamCount(model: NetworkModel, layerId: string): number | nul
 
 function ANNDetails({ layer }: { layer: ANNLayer }) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col">
       <DetailRow label="Neurons" value={String(layer.neurons)} />
       {layer.activation && <DetailRow label="Activation" value={layer.activation.toUpperCase()} />}
       {layer.dropout !== undefined && <DetailRow label="Dropout" value={`${(layer.dropout * 100).toFixed(0)}%`} />}
@@ -81,7 +81,7 @@ function ANNDetails({ layer }: { layer: ANNLayer }) {
 
 function CNNDetails({ layer }: { layer: CNNLayer }) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col">
       {layer.width && layer.height && <DetailRow label="Spatial" value={`${layer.width} x ${layer.height}`} />}
       {layer.channels !== undefined && <DetailRow label="Channels" value={String(layer.channels)} />}
       {layer.filters !== undefined && <DetailRow label="Filters" value={String(layer.filters)} />}
@@ -97,7 +97,7 @@ function CNNDetails({ layer }: { layer: CNNLayer }) {
 
 function LLMDetails({ layer }: { layer: TransformerLayer }) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col">
       {layer.config?.dModel !== undefined && <DetailRow label="d_model" value={String(layer.config.dModel)} />}
       {layer.config?.nHeads !== undefined && <DetailRow label="n_heads" value={String(layer.config.nHeads)} />}
       {layer.config?.dFF !== undefined && <DetailRow label="d_ff" value={String(layer.config.dFF)} />}
@@ -108,9 +108,17 @@ function LLMDetails({ layer }: { layer: TransformerLayer }) {
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{label}</span>
-      <span className="text-xs font-mono" style={{ color: 'var(--text-primary)' }}>{value}</span>
+    <div className="detail-row flex items-center justify-between">
+      <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{label}</span>
+      <span
+        className="text-[11px] font-mono px-1.5 py-0.5 rounded"
+        style={{
+          color: 'var(--text-primary)',
+          background: 'rgba(255, 255, 255, 0.03)',
+        }}
+      >
+        {value}
+      </span>
     </div>
   );
 }
@@ -147,35 +155,52 @@ export default function LayerInspector() {
   const badgeColor = TYPE_BADGE_COLORS[layer.type] ?? 'var(--text-muted)';
 
   return (
-    <div className="fixed top-4 right-4 z-50 w-72">
+    <div className="fixed top-4 right-4 z-50 w-72 slide-in-right">
       <div className="glass-panel rounded-xl overflow-hidden">
+        {/* Top accent line */}
+        <div
+          className="h-px w-full"
+          style={{
+            background: `linear-gradient(90deg, transparent, ${badgeColor}, transparent)`,
+            opacity: 0.5,
+          }}
+        />
+
         {/* Header */}
         <div
           className="flex items-start justify-between p-4"
-          style={{ borderBottom: '1px solid var(--border)' }}
+          style={{ borderBottom: '1px solid var(--border-subtle)' }}
         >
           <div className="min-w-0 flex-1">
-            <h3 className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
+            <h3 className="text-[13px] font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
               {layer.label || layer.id}
             </h3>
             <span
-              className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] uppercase font-semibold tracking-wider"
+              className="inline-flex items-center gap-1.5 mt-1.5 px-2 py-0.5 rounded-md text-[10px] uppercase font-semibold tracking-wider"
               style={{
                 color: badgeColor,
-                background: `color-mix(in srgb, ${badgeColor} 15%, transparent)`,
-                border: `1px solid color-mix(in srgb, ${badgeColor} 30%, transparent)`,
+                background: `color-mix(in srgb, ${badgeColor} 10%, transparent)`,
+                border: `1px solid color-mix(in srgb, ${badgeColor} 20%, transparent)`,
               }}
             >
+              <span
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ background: badgeColor, boxShadow: `0 0 4px ${badgeColor}` }}
+              />
               {layer.type.replace('_', ' ')}
             </span>
           </div>
           <button
             onClick={() => selectLayer(null)}
-            className="w-6 h-6 flex items-center justify-center rounded-md cursor-pointer transition-colors duration-150 shrink-0 ml-2"
-            style={{ color: 'var(--text-muted)', background: 'transparent', border: 'none' }}
+            className="w-7 h-7 flex items-center justify-center rounded-lg cursor-pointer shrink-0 ml-2"
+            style={{
+              color: 'var(--text-muted)',
+              background: 'rgba(255, 255, 255, 0.04)',
+              border: '1px solid var(--border)',
+            }}
             title="Close inspector"
           >
-            <svg width="12" height="12" viewBox="0 0 12 12" stroke="currentColor" strokeWidth="2" fill="none">
+            <svg width="10" height="10" viewBox="0 0 12 12" stroke="currentColor" strokeWidth="2" fill="none">
               <path d="M2 2l8 8M10 2l-8 8" />
             </svg>
           </button>
@@ -189,10 +214,21 @@ export default function LayerInspector() {
 
           {paramCount !== null && (
             <>
-              <div className="h-px my-3" style={{ background: 'var(--border)' }} />
+              <div
+                className="h-px my-3"
+                style={{
+                  background: 'linear-gradient(90deg, transparent, var(--border), transparent)',
+                }}
+              />
               <div className="flex items-center justify-between">
-                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Parameters</span>
-                <span className="text-xs font-mono font-semibold" style={{ color: 'var(--accent-blue)' }}>
+                <span className="text-[11px] font-medium" style={{ color: 'var(--text-muted)' }}>Parameters</span>
+                <span
+                  className="text-[12px] font-mono font-semibold px-2 py-0.5 rounded-md"
+                  style={{
+                    color: 'var(--accent-blue)',
+                    background: 'rgba(79, 195, 247, 0.06)',
+                  }}
+                >
                   {formatNumber(paramCount)}
                 </span>
               </div>

@@ -1,22 +1,65 @@
 @import "tailwindcss";
 
+/* ============================================
+   DESIGN SYSTEM — Premium Dark Theme
+   ============================================ */
 :root {
-  --bg-primary: #0a0a0f;
-  --bg-secondary: #12121a;
-  --bg-panel: #1a1a2e;
+  /* Backgrounds — deep, rich darks */
+  --bg-primary: #08080d;
+  --bg-secondary: #0e0e16;
+  --bg-panel: #14142a;
+  --bg-elevated: #1a1a32;
+  --bg-hover: #1e1e38;
+
+  /* Accent palette */
   --accent-blue: #4fc3f7;
   --accent-purple: #b388ff;
   --accent-green: #69f0ae;
   --accent-orange: #ffab40;
   --accent-red: #ff5252;
-  --text-primary: #e0e0e0;
-  --text-secondary: #9e9e9e;
-  --text-muted: #616161;
-  --border: #2a2a3e;
-  --glow-blue: rgba(79, 195, 247, 0.3);
-  --glow-purple: rgba(179, 136, 255, 0.3);
+  --accent-cyan: #00e5ff;
+
+  /* Text */
+  --text-primary: #eaeaef;
+  --text-secondary: #a0a0b0;
+  --text-muted: #5a5a70;
+
+  /* Borders */
+  --border: rgba(255, 255, 255, 0.06);
+  --border-subtle: rgba(255, 255, 255, 0.03);
+  --border-active: rgba(255, 255, 255, 0.12);
+
+  /* Glows */
+  --glow-blue: rgba(79, 195, 247, 0.35);
+  --glow-purple: rgba(179, 136, 255, 0.35);
+  --glow-green: rgba(105, 240, 174, 0.25);
+  --glow-orange: rgba(255, 171, 64, 0.25);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.7);
+
+  /* Transitions */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 400ms;
+  --duration-slower: 600ms;
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
 }
 
+/* ============================================
+   RESET & BASE
+   ============================================ */
 * {
   margin: 0;
   padding: 0;
@@ -29,49 +72,571 @@ html, body, #root {
   overflow: hidden;
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom scrollbar */
+/* ============================================
+   SCROLLBAR — Ultra-minimal
+   ============================================ */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: rgba(255, 255, 255, 0.14);
 }
 
-/* Glow effects */
+/* ============================================
+   FOCUS RINGS — Keyboard navigation
+   ============================================ */
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 4px var(--accent-blue);
+  border-radius: var(--radius-sm);
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 4px rgba(79, 195, 247, 0.5);
+}
+
+/* ============================================
+   INTERACTIVE ELEMENTS — Global transitions
+   ============================================ */
+button, a, [role="button"] {
+  transition: all var(--duration-normal) var(--ease-smooth);
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* ============================================
+   GLASS PANEL — Premium glassmorphism
+   ============================================ */
+.glass-panel {
+  background: linear-gradient(
+    135deg,
+    rgba(20, 20, 42, 0.85) 0%,
+    rgba(14, 14, 22, 0.9) 100%
+  );
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  border: 1px solid var(--border);
+  box-shadow:
+    var(--shadow-lg),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.glass-panel-strong {
+  background: linear-gradient(
+    135deg,
+    rgba(20, 20, 42, 0.92) 0%,
+    rgba(14, 14, 22, 0.95) 100%
+  );
+  backdrop-filter: blur(40px) saturate(1.4);
+  -webkit-backdrop-filter: blur(40px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    var(--shadow-xl),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+/* ============================================
+   GLOW EFFECTS
+   ============================================ */
 .glow-blue {
-  box-shadow: 0 0 20px var(--glow-blue);
+  box-shadow: 0 0 20px var(--glow-blue), 0 0 60px rgba(79, 195, 247, 0.1);
 }
 
 .glow-purple {
-  box-shadow: 0 0 20px var(--glow-purple);
+  box-shadow: 0 0 20px var(--glow-purple), 0 0 60px rgba(179, 136, 255, 0.1);
 }
 
-/* Subtle breathing animation for empty-state icon */
+.glow-green {
+  box-shadow: 0 0 20px var(--glow-green), 0 0 60px rgba(105, 240, 174, 0.1);
+}
+
+/* ============================================
+   RANGE INPUT — Custom slider styling
+   ============================================ */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 100px;
+  outline: none;
+  cursor: pointer;
+  transition: opacity var(--duration-fast) var(--ease-smooth);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--text-primary);
+  border: 2px solid var(--accent-blue);
+  box-shadow: 0 0 8px rgba(79, 195, 247, 0.4), 0 0 2px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-spring);
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 14px rgba(79, 195, 247, 0.6), 0 0 4px rgba(0, 0, 0, 0.5);
+}
+
+input[type="range"]::-webkit-slider-thumb:active {
+  transform: scale(1.1);
+  background: var(--accent-blue);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--text-primary);
+  border: 2px solid var(--accent-blue);
+  box-shadow: 0 0 8px rgba(79, 195, 247, 0.4), 0 0 2px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-spring);
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 14px rgba(79, 195, 247, 0.6), 0 0 4px rgba(0, 0, 0, 0.5);
+}
+
+input[type="range"]::-moz-range-track {
+  height: 4px;
+  border-radius: 100px;
+  background: var(--border);
+}
+
+/* ============================================
+   ANIMATIONS — Keyframes
+   ============================================ */
+
+/* Empty state breathing */
 @keyframes empty-state-pulse {
   0%, 100% { opacity: 0.3; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(1.06); }
+  50% { opacity: 0.55; transform: scale(1.05); }
 }
 
 .empty-state-icon {
   animation: empty-state-pulse 3s ease-in-out infinite;
 }
 
-/* Panel glass effect */
-.glass-panel {
-  background: rgba(26, 26, 46, 0.8);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border);
+/* Empty state neural path drawing */
+@keyframes draw-path {
+  0% { stroke-dashoffset: 200; }
+  100% { stroke-dashoffset: 0; }
+}
+
+.empty-state-path {
+  stroke-dasharray: 200;
+  stroke-dashoffset: 200;
+  animation: draw-path 3s ease-in-out infinite alternate;
+}
+
+/* Empty state node pulse */
+@keyframes node-pulse {
+  0%, 100% { opacity: 0.3; r: 3; }
+  50% { opacity: 0.7; r: 4.5; }
+}
+
+/* Shimmer — premium loading effect */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.04) 75%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2.5s ease-in-out infinite;
+}
+
+/* Title glow shimmer */
+@keyframes title-shimmer {
+  0%, 100% {
+    background-position: -200% center;
+  }
+  50% {
+    background-position: 200% center;
+  }
+}
+
+.title-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--text-primary) 0%,
+    var(--text-primary) 35%,
+    var(--accent-blue) 50%,
+    var(--text-primary) 65%,
+    var(--text-primary) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: title-shimmer 6s ease-in-out infinite;
+}
+
+/* Pulsing glow for active elements */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 4px var(--glow-color, var(--glow-blue)); }
+  50% { box-shadow: 0 0 16px var(--glow-color, var(--glow-blue)), 0 0 32px var(--glow-color-spread, rgba(79, 195, 247, 0.1)); }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Play button pulsing */
+@keyframes play-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(105, 240, 174, 0.3),
+                0 0 8px rgba(105, 240, 174, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(105, 240, 174, 0),
+                0 0 20px rgba(105, 240, 174, 0.25);
+  }
+}
+
+.play-pulse {
+  animation: play-pulse 2s ease-in-out infinite;
+}
+
+/* Slide-in from right */
+@keyframes slide-in-right {
+  0% {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.slide-in-right {
+  animation: slide-in-right var(--duration-slow) var(--ease-out-expo) both;
+}
+
+/* Scale-fade modal entrance */
+@keyframes modal-enter {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-enter {
+  animation: modal-enter var(--duration-slow) var(--ease-out-expo) both;
+}
+
+/* Backdrop fade */
+@keyframes backdrop-enter {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.backdrop-enter {
+  animation: backdrop-enter var(--duration-normal) var(--ease-smooth) both;
+}
+
+/* Fade up for content */
+@keyframes fade-up {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-up {
+  animation: fade-up var(--duration-slow) var(--ease-out-expo) both;
+}
+
+/* Tab indicator slide */
+@keyframes tab-slide {
+  0% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* Gradient underline for header */
+.gradient-underline::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--accent-blue) 30%,
+    var(--accent-purple) 70%,
+    transparent
+  );
+  opacity: 0.6;
+}
+
+/* ============================================
+   PRESET CARD GRADIENTS — Per model type
+   ============================================ */
+.preset-card {
+  position: relative;
+  overflow: hidden;
+  transition: all var(--duration-normal) var(--ease-smooth);
+}
+
+.preset-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity var(--duration-normal) var(--ease-smooth);
+  pointer-events: none;
+}
+
+.preset-card:hover::before {
+  opacity: 1;
+}
+
+.preset-card:hover {
+  transform: translateY(-1px);
+}
+
+.preset-card-ann::before {
+  background: linear-gradient(135deg, rgba(179, 136, 255, 0.06) 0%, transparent 60%);
+}
+
+.preset-card-cnn::before {
+  background: linear-gradient(135deg, rgba(255, 171, 64, 0.06) 0%, transparent 60%);
+}
+
+.preset-card-llm::before {
+  background: linear-gradient(135deg, rgba(79, 195, 247, 0.06) 0%, transparent 60%);
+}
+
+/* Active preset pulsing glow */
+@keyframes active-preset-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 1px var(--preset-color), 0 0 8px var(--preset-glow);
+  }
+  50% {
+    box-shadow: 0 0 0 1px var(--preset-color), 0 0 20px var(--preset-glow);
+  }
+}
+
+.preset-card-active {
+  animation: active-preset-glow 2.5s ease-in-out infinite;
+}
+
+/* ============================================
+   TOGGLE SWITCH — Premium feel
+   ============================================ */
+.toggle-track {
+  position: relative;
+  width: 38px;
+  height: 20px;
+  border-radius: 100px;
+  transition: all var(--duration-normal) var(--ease-spring);
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+
+.toggle-track::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  transition: all var(--duration-normal) var(--ease-spring);
+}
+
+.toggle-track[data-checked="true"]::after {
+  transform: translateX(18px);
+}
+
+.toggle-track[data-checked="true"] {
+  box-shadow: 0 0 12px var(--glow-blue);
+}
+
+/* ============================================
+   KBD — Tactile key caps
+   ============================================ */
+.kbd-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-primary);
+  background: linear-gradient(180deg, var(--bg-elevated) 0%, var(--bg-panel) 100%);
+  border: 1px solid var(--border-active);
+  border-bottom: 3px solid rgba(0, 0, 0, 0.4);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: all var(--duration-fast) var(--ease-smooth);
+}
+
+.kbd-key:hover {
+  background: linear-gradient(180deg, var(--bg-hover) 0%, var(--bg-elevated) 100%);
+  border-bottom-width: 2px;
+  transform: translateY(1px);
+}
+
+/* ============================================
+   LAYER DOT — Color indicator for layer types
+   ============================================ */
+.layer-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 6px currentColor;
+}
+
+/* ============================================
+   SIDEBAR — Smooth transitions
+   ============================================ */
+.sidebar-container {
+  transition: width var(--duration-slow) var(--ease-out-expo),
+              opacity var(--duration-normal) var(--ease-smooth);
+}
+
+.sidebar-content {
+  transition: opacity var(--duration-normal) var(--ease-smooth),
+              transform var(--duration-slow) var(--ease-out-expo);
+}
+
+.sidebar-content[data-collapsed="true"] {
+  opacity: 0;
+  transform: translateX(-12px);
+  pointer-events: none;
+}
+
+.sidebar-content[data-collapsed="false"] {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ============================================
+   TAB INDICATOR — Sliding accent
+   ============================================ */
+.tab-indicator {
+  position: absolute;
+  bottom: 0;
+  height: 2px;
+  background: var(--accent-blue);
+  border-radius: 2px 2px 0 0;
+  transition: all var(--duration-normal) var(--ease-out-expo);
+  box-shadow: 0 0 8px var(--glow-blue);
+}
+
+/* ============================================
+   EMPTY STATE — Animated neural network
+   ============================================ */
+@keyframes signal-flow {
+  0% { stroke-dashoffset: 20; }
+  100% { stroke-dashoffset: 0; }
+}
+
+.signal-path {
+  stroke-dasharray: 4 6;
+  animation: signal-flow 1.5s linear infinite;
+}
+
+@keyframes node-breathe-1 {
+  0%, 100% { opacity: 0.25; }
+  33% { opacity: 0.6; }
+}
+
+@keyframes node-breathe-2 {
+  0%, 100% { opacity: 0.6; }
+  66% { opacity: 0.25; }
+}
+
+@keyframes node-breathe-3 {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.7; }
+}
+
+.node-breathe-1 { animation: node-breathe-1 3s ease-in-out infinite; }
+.node-breathe-2 { animation: node-breathe-2 3s ease-in-out infinite; }
+.node-breathe-3 { animation: node-breathe-3 3s ease-in-out infinite; }
+
+/* ============================================
+   TRANSPORT BAR — Premium hover states
+   ============================================ */
+.transport-btn {
+  transition: all var(--duration-normal) var(--ease-smooth);
+  position: relative;
+}
+
+.transport-btn:hover {
+  background: var(--bg-hover) !important;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.05);
+}
+
+.transport-btn:active {
+  transform: scale(0.93);
+}
+
+/* ============================================
+   DETAIL ROW — Subtle separators
+   ============================================ */
+.detail-row {
+  position: relative;
+  padding: 6px 0;
+}
+
+.detail-row + .detail-row {
+  border-top: 1px solid var(--border-subtle);
 }

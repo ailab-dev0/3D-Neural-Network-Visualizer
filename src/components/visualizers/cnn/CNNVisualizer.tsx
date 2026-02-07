@@ -1,9 +1,11 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
 import { Text, Box, RoundedBox, Line } from '@react-three/drei';
 import * as THREE from 'three';
 import type { CNNModel, CNNLayer } from '../../../models/cnn-schema';
 import { useVisualizationStore } from '../../../stores/visualizationStore';
 import { COLORS } from '../../../utils/colors';
+import LayerTransition from '../../shared/LayerTransition';
 
 interface CNNVisualizerProps {
   model: CNNModel;
@@ -35,6 +37,7 @@ function FeatureMapVolume({
   label,
   layerId,
   isSelected,
+  layerIndex = 0,
 }: {
   position: [number, number, number];
   size: { w: number; h: number; d: number };
@@ -42,9 +45,27 @@ function FeatureMapVolume({
   label?: string;
   layerId: string;
   isSelected: boolean;
+  layerIndex?: number;
 }) {
   const showLabels = useVisualizationStore((s) => s.showLabels);
   const selectLayer = useVisualizationStore((s) => s.selectLayer);
+  const animationState = useVisualizationStore((s) => s.animationState);
+  const animationSpeed = useVisualizationStore((s) => s.animationSpeed);
+  const matRef = useRef<THREE.MeshStandardMaterial>(null);
+
+  // Subtle pulse when animation is playing
+  useFrame(() => {
+    if (!matRef.current) return;
+    if (animationState === 'playing') {
+      const time = Date.now() * 0.001;
+      const pulse = Math.sin(time * animationSpeed * 1.2 + layerIndex * 0.8) * 0.25;
+      matRef.current.emissiveIntensity = (isSelected ? 1.5 : 0.3) + pulse;
+      matRef.current.opacity = 0.7 + pulse * 0.1;
+    } else {
+      matRef.current.emissiveIntensity = isSelected ? 1.5 : 0.3;
+      matRef.current.opacity = 0.7;
+    }
+  });
 
   return (
     <group position={position}>
@@ -58,6 +79,7 @@ function FeatureMapVolume({
         onPointerLeave={() => { document.body.style.cursor = 'auto'; }}
       >
         <meshStandardMaterial
+          ref={matRef}
           color={color}
           emissive={color}
           emissiveIntensity={isSelected ? 1.5 : 0.3}
@@ -165,7 +187,7 @@ export default function CNNVisualizer({ model }: CNNVisualizerProps) {
 
   return (
     <group position={[0, 0, centerOffset]}>
-      {visualLayers.map(({ layer, position, visualSize }) => (
+      {visualLayers.map(({ layer, position, visualSize }, layerIdx) => (
         <group key={layer.id}>
           <FeatureMapVolume
             position={[position.x, position.y, position.z]}
@@ -174,6 +196,7 @@ export default function CNNVisualizer({ model }: CNNVisualizerProps) {
             label={layer.label}
             layerId={layer.id}
             isSelected={selectedLayerId === layer.id}
+            layerIndex={layerIdx}
           />
 
           {/* Show kernel for conv layers */}
@@ -187,7 +210,7 @@ export default function CNNVisualizer({ model }: CNNVisualizerProps) {
         </group>
       ))}
 
-      {/* Connection arrows between layers */}
+      {/* Connection arrows and LayerTransition between layers */}
       {visualLayers.slice(0, -1).map(({ layer, position, visualSize }, i) => {
         const next = visualLayers[i + 1];
         const startZ = position.z + visualSize.d / 2;
@@ -209,6 +232,16 @@ export default function CNNVisualizer({ model }: CNNVisualizerProps) {
               <coneGeometry args={[0.15, 0.3, 8]} />
               <meshBasicMaterial color="#4fc3f7" transparent opacity={0.5} />
             </mesh>
+
+            {/* Animated data flow between layers */}
+            <LayerTransition
+              start={[0, 0, startZ]}
+              end={[0, 0, endZ]}
+              particleCount={5}
+              color={getLayerColor(layer.type)}
+              tubeRadius={0.025}
+              particleSize={0.07}
+            />
           </group>
         );
       })}

@@ -35,6 +35,9 @@ function NetworkVisualization() {
   }
 }
 
+/* ============================================
+   Animated Empty State — Neural wireframe sketch
+   ============================================ */
 function EmptyState() {
   const currentModel = useModelStore((s) => s.currentModel);
 
@@ -42,30 +45,67 @@ function EmptyState() {
 
   return (
     <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-      <div className="text-center px-6">
-        <div className="empty-state-icon" style={{ color: 'var(--accent-blue)' }}>
+      <div className="text-center px-6 fade-up">
+        {/* Animated neural network wireframe */}
+        <div className="mx-auto mb-6 relative" style={{ width: 140, height: 120 }}>
           <svg
-            width="64"
-            height="64"
-            viewBox="0 0 64 64"
+            width="140"
+            height="120"
+            viewBox="0 0 140 120"
             fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            className="mx-auto mb-4"
+            className="mx-auto"
           >
-            <circle cx="32" cy="32" r="28" strokeDasharray="4 4" />
-            <circle cx="22" cy="24" r="4" />
-            <circle cx="42" cy="24" r="4" />
-            <circle cx="32" cy="38" r="4" />
-            <line x1="26" y1="24" x2="38" y2="24" />
-            <line x1="22" y1="28" x2="32" y2="34" />
-            <line x1="42" y1="28" x2="32" y2="34" />
+            {/* Connections — animated signal paths */}
+            {/* Layer 1 to Layer 2 */}
+            <line x1="25" y1="30" x2="70" y2="20" className="signal-path" stroke="var(--accent-blue)" strokeWidth="0.8" opacity="0.4" />
+            <line x1="25" y1="30" x2="70" y2="50" className="signal-path" stroke="var(--accent-blue)" strokeWidth="0.8" opacity="0.3" />
+            <line x1="25" y1="30" x2="70" y2="80" className="signal-path" stroke="var(--accent-blue)" strokeWidth="0.8" opacity="0.2" />
+            <line x1="25" y1="60" x2="70" y2="20" className="signal-path" stroke="var(--accent-purple)" strokeWidth="0.8" opacity="0.2" />
+            <line x1="25" y1="60" x2="70" y2="50" className="signal-path" stroke="var(--accent-purple)" strokeWidth="0.8" opacity="0.4" />
+            <line x1="25" y1="60" x2="70" y2="80" className="signal-path" stroke="var(--accent-purple)" strokeWidth="0.8" opacity="0.3" />
+            <line x1="25" y1="90" x2="70" y2="20" className="signal-path" stroke="var(--accent-green)" strokeWidth="0.8" opacity="0.2" />
+            <line x1="25" y1="90" x2="70" y2="50" className="signal-path" stroke="var(--accent-green)" strokeWidth="0.8" opacity="0.3" />
+            <line x1="25" y1="90" x2="70" y2="80" className="signal-path" stroke="var(--accent-green)" strokeWidth="0.8" opacity="0.4" />
+
+            {/* Layer 2 to Layer 3 */}
+            <line x1="70" y1="20" x2="115" y2="40" className="signal-path" stroke="var(--accent-blue)" strokeWidth="0.8" opacity="0.35" />
+            <line x1="70" y1="20" x2="115" y2="80" className="signal-path" stroke="var(--accent-blue)" strokeWidth="0.8" opacity="0.2" />
+            <line x1="70" y1="50" x2="115" y2="40" className="signal-path" stroke="var(--accent-purple)" strokeWidth="0.8" opacity="0.3" />
+            <line x1="70" y1="50" x2="115" y2="80" className="signal-path" stroke="var(--accent-purple)" strokeWidth="0.8" opacity="0.35" />
+            <line x1="70" y1="80" x2="115" y2="40" className="signal-path" stroke="var(--accent-green)" strokeWidth="0.8" opacity="0.2" />
+            <line x1="70" y1="80" x2="115" y2="80" className="signal-path" stroke="var(--accent-green)" strokeWidth="0.8" opacity="0.35" />
+
+            {/* Layer 1 — Input nodes */}
+            <circle cx="25" cy="30" r="5" fill="var(--accent-blue)" className="node-breathe-1" />
+            <circle cx="25" cy="60" r="5" fill="var(--accent-purple)" className="node-breathe-2" />
+            <circle cx="25" cy="90" r="5" fill="var(--accent-green)" className="node-breathe-3" />
+
+            {/* Layer 2 — Hidden nodes */}
+            <circle cx="70" cy="20" r="5" fill="var(--accent-blue)" className="node-breathe-2" />
+            <circle cx="70" cy="50" r="5" fill="var(--accent-purple)" className="node-breathe-3" />
+            <circle cx="70" cy="80" r="5" fill="var(--accent-green)" className="node-breathe-1" />
+
+            {/* Layer 3 — Output nodes */}
+            <circle cx="115" cy="40" r="5" fill="var(--accent-blue)" className="node-breathe-3" />
+            <circle cx="115" cy="80" r="5" fill="var(--accent-purple)" className="node-breathe-1" />
+
+            {/* Subtle outer glow rings */}
+            <circle cx="25" cy="30" r="8" stroke="var(--accent-blue)" strokeWidth="0.5" opacity="0.15" className="node-breathe-1" />
+            <circle cx="70" cy="50" r="8" stroke="var(--accent-purple)" strokeWidth="0.5" opacity="0.15" className="node-breathe-2" />
+            <circle cx="115" cy="40" r="8" stroke="var(--accent-blue)" strokeWidth="0.5" opacity="0.15" className="node-breathe-3" />
           </svg>
         </div>
-        <p className="text-lg font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+
+        <p
+          className="text-lg font-semibold mb-2 tracking-wide"
+          style={{ color: 'var(--text-secondary)' }}
+        >
           Select a model to begin
         </p>
-        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+        <p
+          className="text-sm max-w-xs mx-auto leading-relaxed"
+          style={{ color: 'var(--text-muted)' }}
+        >
           Choose a neural network preset from the sidebar to visualize its architecture in 3D
         </p>
       </div>
@@ -74,7 +114,7 @@ function EmptyState() {
 }
 
 function useKeyboardShortcuts() {
-  const { animationState, play, pause, toggleLabels, toggleWeights, toggleDataFlow, autoRotate, setAutoRotate } =
+  const { animationState, play, pause, toggleLabels, toggleWeights, toggleDataFlow, toggleLightCone, autoRotate, setAutoRotate } =
     useVisualizationStore();
   const { setSidebarTab } = useUIStore();
   const { setModelType } = useModelStore();
@@ -109,6 +149,10 @@ function useKeyboardShortcuts() {
         case 'F':
           toggleDataFlow();
           break;
+        case 'c':
+        case 'C':
+          toggleLightCone();
+          break;
         case '1':
           setModelType('ann');
           setSidebarTab('models');
@@ -126,7 +170,7 @@ function useKeyboardShortcuts() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [animationState, autoRotate, play, pause, toggleLabels, toggleWeights, toggleDataFlow, setAutoRotate, setSidebarTab, setModelType]);
+  }, [animationState, autoRotate, play, pause, toggleLabels, toggleWeights, toggleDataFlow, toggleLightCone, setAutoRotate, setSidebarTab, setModelType]);
 }
 
 export default function App() {
@@ -138,21 +182,30 @@ export default function App() {
       <header
         className="absolute top-0 left-0 right-0 z-40 pointer-events-none"
         style={{
-          background: 'linear-gradient(to bottom, rgba(10, 10, 15, 0.8), transparent)',
+          background: 'linear-gradient(to bottom, rgba(8, 8, 13, 0.9) 0%, rgba(8, 8, 13, 0.4) 60%, transparent 100%)',
         }}
       >
-        <div className="flex items-center justify-center py-3 px-4">
+        <div className="relative flex items-center justify-center py-4 px-4">
           <div className="text-center">
-            <h1
-              className="text-base font-semibold tracking-wide"
-              style={{ color: 'var(--text-primary)' }}
-            >
+            <h1 className="title-shimmer text-base font-semibold tracking-wide">
               Neural Network Visualizer
             </h1>
-            <p className="text-[11px] tracking-wider" style={{ color: 'var(--text-muted)' }}>
+            <p
+              className="text-[10px] font-medium uppercase tracking-[0.2em] mt-0.5"
+              style={{ color: 'var(--text-muted)' }}
+            >
               Interactive 3D Architecture Explorer
             </p>
           </div>
+          {/* Gradient underline accent */}
+          <div
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 h-px"
+            style={{
+              width: '180px',
+              background: 'linear-gradient(90deg, transparent, var(--accent-blue), var(--accent-purple), transparent)',
+              opacity: 0.4,
+            }}
+          />
         </div>
       </header>
 

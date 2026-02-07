@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import type { LLMModel, TransformerLayer } from '../../../models/llm-schema';
 import { useVisualizationStore } from '../../../stores/visualizationStore';
 import { COLORS, ATTENTION_HEAD_COLORS } from '../../../utils/colors';
+import LayerTransition from '../../shared/LayerTransition';
 
 interface LLMVisualizerProps {
   model: LLMModel;
@@ -52,10 +53,21 @@ function AttentionBeam({
     };
   }, [lineObj]);
 
+  const animationState = useVisualizationStore((s) => s.animationState);
+  const animationSpeed = useVisualizationStore((s) => s.animationSpeed);
+
   useFrame(() => {
     if (ref.current) {
       const mat = ref.current.material as THREE.LineBasicMaterial;
-      mat.opacity = 0.1 + strength * 0.6 + Math.sin(Date.now() * 0.002) * 0.1;
+      if (animationState === 'playing') {
+        // Active pulsing when playing — modulate opacity with sine wave
+        const time = Date.now() * 0.001;
+        const pulse = Math.sin(time * animationSpeed * 2.0 + headIndex * 1.2) * 0.25;
+        mat.opacity = Math.max(0.05, 0.1 + strength * 0.6 + pulse);
+      } else {
+        // Static opacity when paused/idle
+        mat.opacity = 0.1 + strength * 0.3;
+      }
     }
   });
 
@@ -73,10 +85,22 @@ function TokenBlock({
   index: number;
 }) {
   const ref = useRef<THREE.Mesh>(null);
+  const animationState = useVisualizationStore((s) => s.animationState);
+  const animationSpeed = useVisualizationStore((s) => s.animationSpeed);
 
   useFrame(() => {
     if (ref.current) {
-      ref.current.position.y = position[1] + Math.sin(Date.now() * 0.001 + index * 0.5) * 0.1;
+      if (animationState === 'playing') {
+        // Subtle floating bob + horizontal drift when playing
+        const time = Date.now() * 0.001;
+        const bobY = Math.sin(time * animationSpeed * 0.8 + index * 0.5) * 0.12;
+        const driftX = Math.sin(time * animationSpeed * 0.3 + index * 1.1) * 0.03;
+        ref.current.position.y = position[1] + bobY;
+        ref.current.position.x = driftX;
+      } else {
+        ref.current.position.y = position[1];
+        ref.current.position.x = 0;
+      }
     }
   });
 
@@ -396,6 +420,36 @@ export default function LLMVisualizer({ model }: LLMVisualizerProps) {
           </group>
         );
       })}
+
+      {/* LayerTransition between consecutive transformer blocks */}
+      {blocks.slice(0, -1).map((block, i) => {
+        const nextBlock = blocks[i + 1];
+        const startY = block.yPosition - blockSpacing / 2 + 0.5;
+        const endY = nextBlock.yPosition + blockSpacing / 2 - 0.5;
+        return (
+          <LayerTransition
+            key={`block-transition-${block.index}`}
+            start={[0, startY, 0]}
+            end={[0, endY, 0]}
+            particleCount={4}
+            color={COLORS.attention}
+            tubeRadius={0.02}
+            particleSize={0.06}
+          />
+        );
+      })}
+
+      {/* Transition from input tokens to first block */}
+      {blocks.length > 0 && (
+        <LayerTransition
+          start={[0, -0.5, 0]}
+          end={[0, blocks[0].yPosition + blockSpacing / 2 - 0.5, 0]}
+          particleCount={3}
+          color={COLORS.embedding}
+          tubeRadius={0.02}
+          particleSize={0.05}
+        />
+      )}
     </group>
   );
 }

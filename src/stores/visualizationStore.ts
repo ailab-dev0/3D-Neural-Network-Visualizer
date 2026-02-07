@@ -2,6 +2,7 @@ import { create } from 'zustand';
 
 export type ViewMode = 'orbit' | 'flythrough' | 'inspect';
 export type AnimationState = 'idle' | 'playing' | 'paused' | 'stepping';
+export type LightConeMode = 'forward' | 'backward' | 'both';
 
 interface VisualizationState {
   // Camera
@@ -28,6 +29,11 @@ interface VisualizationState {
   neuronSize: number; // 0.5 to 2.0
   connectionOpacity: number; // 0 to 1
 
+  // Cognitive Light Cone
+  lightConeEnabled: boolean;
+  lightConeMode: LightConeMode;
+  lightConeDepth: number; // 1-10
+
   // Educational mode
   educationalMode: boolean;
 
@@ -48,13 +54,16 @@ interface VisualizationState {
   setGlowIntensity: (intensity: number) => void;
   setNeuronSize: (size: number) => void;
   setConnectionOpacity: (opacity: number) => void;
+  toggleLightCone: () => void;
+  setLightConeMode: (mode: LightConeMode) => void;
+  setLightConeDepth: (depth: number) => void;
   toggleEducationalMode: () => void;
 }
 
 export const useVisualizationStore = create<VisualizationState>((set) => ({
   viewMode: 'orbit',
   autoRotate: true,
-  animationState: 'idle',
+  animationState: 'playing',
   animationSpeed: 1.0,
   currentStep: 0,
   totalSteps: 0,
@@ -64,10 +73,13 @@ export const useVisualizationStore = create<VisualizationState>((set) => ({
   showWeights: true,
   showActivations: true,
   showLabels: true,
-  showDataFlow: false,
+  showDataFlow: true,
   glowIntensity: 0.6,
   neuronSize: 1.0,
   connectionOpacity: 0.4,
+  lightConeEnabled: false,
+  lightConeMode: 'both',
+  lightConeDepth: 3,
   educationalMode: false,
 
   setViewMode: (mode) => set({ viewMode: mode }),
@@ -86,5 +98,8 @@ export const useVisualizationStore = create<VisualizationState>((set) => ({
   setGlowIntensity: (intensity) => set({ glowIntensity: intensity }),
   setNeuronSize: (size) => set({ neuronSize: size }),
   setConnectionOpacity: (opacity) => set({ connectionOpacity: opacity }),
+  toggleLightCone: () => set((s) => ({ lightConeEnabled: !s.lightConeEnabled })),
+  setLightConeMode: (mode) => set({ lightConeMode: mode }),
+  setLightConeDepth: (depth) => set({ lightConeDepth: Math.max(1, Math.min(10, depth)) }),
   toggleEducationalMode: () => set((s) => ({ educationalMode: !s.educationalMode })),
 }));

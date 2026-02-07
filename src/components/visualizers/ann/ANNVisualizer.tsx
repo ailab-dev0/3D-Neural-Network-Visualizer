@@ -8,6 +8,9 @@ import { calculateNeuronPositions, calculateLayerDepths } from '../../../utils/m
 import Neuron from '../../shared/Neuron';
 import Connection from '../../shared/Connection';
 import DataFlowParticle from '../../shared/DataFlowParticle';
+import ActivationGlow from '../../shared/ActivationGlow';
+import LayerTransition from '../../shared/LayerTransition';
+import CognitiveLightCone from '../../shared/CognitiveLightCone';
 
 interface ANNVisualizerProps {
   model: ANNModel;
@@ -21,9 +24,13 @@ interface LayerData {
 
 export default function ANNVisualizer({ model }: ANNVisualizerProps) {
   const showWeights = useVisualizationStore((s) => s.showWeights);
-  const showDataFlow = useVisualizationStore((s) => s.showDataFlow);
   const showLabels = useVisualizationStore((s) => s.showLabels);
   const selectedLayerId = useVisualizationStore((s) => s.selectedLayerId);
+  const animationState = useVisualizationStore((s) => s.animationState);
+  const isPlaying = animationState === 'playing';
+  const lightConeEnabled = useVisualizationStore((s) => s.lightConeEnabled);
+  const lightConeMode = useVisualizationStore((s) => s.lightConeMode);
+  const lightConeDepth = useVisualizationStore((s) => s.lightConeDepth);
 
   const layerData = useMemo((): LayerData[] => {
     const depths = calculateLayerDepths(model.layers.length, 6);
@@ -74,6 +81,64 @@ export default function ANNVisualizer({ model }: ANNVisualizerProps) {
     return result;
   }, [layerData]);
 
+  // Cognitive Light Cone: determine which layers fall within the cone reach
+  const lightConeActive = lightConeEnabled && selectedLayerId !== null;
+
+  const selectedLayerIndex = useMemo(() => {
+    if (!selectedLayerId) return -1;
+    return layerData.findIndex((ld) => ld.layer.id === selectedLayerId);
+  }, [layerData, selectedLayerId]);
+
+  const layersInCone = useMemo(() => {
+    const inCone = new Set<string>();
+    if (!lightConeActive || selectedLayerIndex < 0) return inCone;
+
+    // The selected layer is always in the cone
+    inCone.add(layerData[selectedLayerIndex].layer.id);
+
+    const showForward = lightConeMode === 'forward' || lightConeMode === 'both';
+    const showBackward = lightConeMode === 'backward' || lightConeMode === 'both';
+
+    // Forward: layers after the selected layer, up to lightConeDepth
+    if (showForward) {
+      for (let i = 1; i <= lightConeDepth; i++) {
+        const idx = selectedLayerIndex + i;
+        if (idx < layerData.length) {
+          inCone.add(layerData[idx].layer.id);
+        }
+      }
+    }
+
+    // Backward: layers before the selected layer, up to lightConeDepth
+    if (showBackward) {
+      for (let i = 1; i <= lightConeDepth; i++) {
+        const idx = selectedLayerIndex - i;
+        if (idx >= 0) {
+          inCone.add(layerData[idx].layer.id);
+        }
+      }
+    }
+
+    return inCone;
+  }, [lightConeActive, selectedLayerIndex, lightConeMode, lightConeDepth, layerData]);
+
+  // Cone geometry dimensions based on layer spacing and depth
+  const coneParams = useMemo(() => {
+    if (!lightConeActive || selectedLayerIndex < 0) {
+      return { originPosition: [0, 0, 0] as [number, number, number], radius: 0, depth: 0 };
+    }
+    const originDepth = layerData[selectedLayerIndex].depth;
+    const layerSpacing = layerData.length > 1 ? Math.abs(layerData[1].depth - layerData[0].depth) : 6;
+    const coneDepthWorld = lightConeDepth * layerSpacing;
+    // Radius expands proportionally — wider for more depth
+    const coneRadius = 1.5 + lightConeDepth * 0.8;
+    return {
+      originPosition: [0, 0, originDepth] as [number, number, number],
+      radius: coneRadius,
+      depth: coneDepthWorld,
+    };
+  }, [lightConeActive, selectedLayerIndex, lightConeDepth, layerData]);
+
   // Pre-compute data flow particle assignments with stable random values
   const particleData = useMemo(() => {
     const result: { layerIdx: number; index: number; fromPos: THREE.Vector3; toPos: THREE.Vector3; speed: number }[] = [];
@@ -100,66 +165,94 @@ export default function ANNVisualizer({ model }: ANNVisualizerProps) {
 
   return (
     <group>
+      {/* Scene dim overlay -- when light cone is active, dim the ambient scene slightly */}
+
       {/* Layers */}
-      {layerData.map(({ layer, positions, depth }) => (
-        <group key={layer.id}>
-          {/* Layer label */}
-          {showLabels && (
-            <Text
-              position={[0, positions.length > 8 ? 3.5 : 2.5, depth]}
-              fontSize={0.4}
-              color="#e0e0e0"
-              anchorX="center"
-              anchorY="bottom"
-              font={undefined}
-            >
-              {layer.label || layer.id}
-              {layer.neurons > 32 ? ` (${layer.neurons} neurons)` : ''}
-            </Text>
-          )}
+      {layerData.map(({ layer, positions, depth }) => {
+        const inCone = !lightConeActive || layersInCone.has(layer.id);
+        // When light cone is active, layers outside the cone get dimmed
+        const layerOpacityScale = lightConeActive ? (inCone ? 1.0 : 0.15) : 1.0;
+        // Boost activation for neurons inside the cone
+        const coneActivationBoost = lightConeActive && inCone ? 0.4 : 0;
 
-          {/* Activation label */}
-          {showLabels && layer.activation && (
-            <Text
-              position={[0, positions.length > 8 ? -3.5 : -2.5, depth]}
-              fontSize={0.25}
-              color={getActivationColor(layer.activation).getStyle()}
-              anchorX="center"
-              anchorY="top"
-              font={undefined}
-            >
-              {layer.activation.toUpperCase()}
-            </Text>
-          )}
+        return (
+          <group key={layer.id}>
+            {/* Layer label */}
+            {showLabels && (
+              <Text
+                position={[0, positions.length > 8 ? 3.5 : 2.5, depth]}
+                fontSize={0.4}
+                color={lightConeActive && !inCone ? '#444444' : '#e0e0e0'}
+                anchorX="center"
+                anchorY="bottom"
+                font={undefined}
+              >
+                {layer.label || layer.id}
+                {layer.neurons > 32 ? ` (${layer.neurons} neurons)` : ''}
+              </Text>
+            )}
 
-          {/* Neurons */}
-          {positions.map((pos, j) => (
-            <Neuron
-              key={`${layer.id}-${j}`}
-              position={[pos.x, pos.y, pos.z]}
-              color={getLayerColor(layer)}
-              layerId={layer.id}
-              neuronIndex={j}
-              isSelected={selectedLayerId === layer.id}
-              size={layer.type === 'input' ? 0.25 : layer.type === 'output' ? 0.35 : 0.3}
-            />
-          ))}
-        </group>
-      ))}
+            {/* Activation label */}
+            {showLabels && layer.activation && (
+              <Text
+                position={[0, positions.length > 8 ? -3.5 : -2.5, depth]}
+                fontSize={0.25}
+                color={lightConeActive && !inCone ? '#333333' : getActivationColor(layer.activation).getStyle()}
+                anchorX="center"
+                anchorY="top"
+                font={undefined}
+              >
+                {layer.activation.toUpperCase()}
+              </Text>
+            )}
+
+            {/* Neurons wrapped with ActivationGlow */}
+            {positions.map((pos, j) => (
+              <group key={`${layer.id}-${j}`} position={[pos.x, pos.y, pos.z]}>
+                <ActivationGlow
+                  activation={(0.3 + (j % 5) * 0.14 + coneActivationBoost) * layerOpacityScale}
+                  color={getLayerColor(layer)}
+                  glowScale={(layer.type === 'output' ? 2.0 : 1.6) * layerOpacityScale}
+                  phaseOffset={j * 0.7 + positions.length * 0.3}
+                >
+                  <Neuron
+                    position={[0, 0, 0]}
+                    color={getLayerColor(layer)}
+                    layerId={layer.id}
+                    neuronIndex={j}
+                    isSelected={selectedLayerId === layer.id}
+                    activation={lightConeActive ? (inCone ? 0.6 + coneActivationBoost : 0) : undefined}
+                    size={layer.type === 'input' ? 0.25 : layer.type === 'output' ? 0.35 : 0.3}
+                  />
+                </ActivationGlow>
+              </group>
+            ))}
+          </group>
+        );
+      })}
 
       {/* Connections between layers */}
-      {showWeights && connectionData.map(({ fromLayerId, fromPos, toPos, weight }, connIdx) => (
-        <Connection
-          key={`conn-${fromLayerId}-${connIdx}`}
-          start={[fromPos.x, fromPos.y, fromPos.z]}
-          end={[toPos.x, toPos.y, toPos.z]}
-          weight={weight}
-          color={COLORS.hidden}
-        />
-      ))}
+      {showWeights && connectionData.map(({ fromLayerId, fromPos, toPos, weight }, connIdx) => {
+        // Determine if this connection is within the light cone
+        const connInCone = !lightConeActive || layersInCone.has(fromLayerId);
+        const connWeight = lightConeActive
+          ? (connInCone ? weight * 1.5 : weight * 0.08)
+          : weight;
 
-      {/* Data flow particles */}
-      {showDataFlow && particleData.map(({ layerIdx, index, fromPos, toPos, speed }) => (
+        return (
+          <Connection
+            key={`conn-${fromLayerId}-${connIdx}`}
+            start={[fromPos.x, fromPos.y, fromPos.z]}
+            end={[toPos.x, toPos.y, toPos.z]}
+            weight={connWeight}
+            color={COLORS.hidden}
+            animated={isPlaying}
+          />
+        );
+      })}
+
+      {/* Data flow particles — always visible */}
+      {particleData.map(({ layerIdx, index, fromPos, toPos, speed }) => (
         <DataFlowParticle
           key={`particle-${layerIdx}-${index}`}
           start={[fromPos.x, fromPos.y, fromPos.z]}
@@ -168,6 +261,34 @@ export default function ANNVisualizer({ model }: ANNVisualizerProps) {
           delay={index * 0.7}
         />
       ))}
+
+      {/* Layer transitions — animated particle streams between consecutive layers */}
+      {layerData.slice(0, -1).map(({ layer, depth }, i) => {
+        const nextLayer = layerData[i + 1];
+        const startPos: [number, number, number] = [0, 0, depth];
+        const endPos: [number, number, number] = [0, 0, nextLayer.depth];
+        return (
+          <LayerTransition
+            key={`transition-${layer.id}`}
+            start={startPos}
+            end={endPos}
+            particleCount={4}
+            color={getLayerColor(layer)}
+            tubeRadius={0.03}
+            particleSize={0.08}
+          />
+        );
+      })}
+
+      {/* Cognitive Light Cone */}
+      {lightConeActive && (
+        <CognitiveLightCone
+          originPosition={coneParams.originPosition}
+          direction={lightConeMode}
+          radius={coneParams.radius}
+          depth={coneParams.depth}
+        />
+      )}
     </group>
   );
 }
